@@ -17,8 +17,9 @@
 #define RPI_GPIO_INTERNAL_H
 
 #include "gpio-bits.h"
-
 #include <vector>
+
+
 
 // Putting this in our namespace to not collide with other things called like
 // this.
@@ -32,7 +33,7 @@ public:
   // (e.g. due to a permission problem).
   bool Init(int
 #if RGB_SLOWDOWN_GPIO
-            slowdown = RGB_SLOWDOWN_GPIO
+            slowdown = RGB_SLOWDOWN_GPIO,
 #else
             slowdown = 1
 #endif
@@ -80,27 +81,18 @@ public:
 
 private:
   inline gpio_bits_t ReadRegisters() const {
-    return (static_cast<gpio_bits_t>(*gpio_read_bits_low_)
-#ifdef ENABLE_WIDE_GPIO_COMPUTE_MODULE
-            | (static_cast<gpio_bits_t>(*gpio_read_bits_low_) << 32)
-#endif
-            );
+    return (static_cast<gpio_bits_t>(0));
   }
 
   inline void WriteSetBits(gpio_bits_t value) {
-    *gpio_set_bits_low_ = static_cast<uint32_t>(value & 0xFFFFFFFF);
-#ifdef ENABLE_WIDE_GPIO_COMPUTE_MODULE
-    if (uses_64_bit_)
-      *gpio_set_bits_high_ = static_cast<uint32_t>(value >> 32);
-#endif
+   // *gpio_set_bits_low_ = static_cast<uint32_t>(value & 0xFFFFFFFF);
+    *h3_gpio_hack = static_cast<uint32_t>(*h3_gpio_hack | value); //static_cast<uint32_t>(value & 0xFFFFFFFF);
   }
 
   inline void WriteClrBits(gpio_bits_t value) {
-    *gpio_clr_bits_low_ = static_cast<uint32_t>(value & 0xFFFFFFFF);
-#ifdef ENABLE_WIDE_GPIO_COMPUTE_MODULE
-    if (uses_64_bit_)
-      *gpio_clr_bits_high_ = static_cast<uint32_t>(value >> 32);
-#endif
+    //  *gpio_clr_bits_low_ = static_cast<uint32_t>(value & 0xFFFFFFFF);
+    *h3_gpio_hack  = static_cast<uint32_t>( *h3_gpio_hack & ~(value & 0xFFFFFFFF) );
+   //	__sync_synchronize();
   }
 
 private:
@@ -108,17 +100,16 @@ private:
   gpio_bits_t input_bits_;
   gpio_bits_t reserved_bits_;
   int slowdown_;
-
+/*
   volatile uint32_t *gpio_set_bits_low_;
   volatile uint32_t *gpio_clr_bits_low_;
   volatile uint32_t *gpio_read_bits_low_;
+*/
+  volatile uint32_t*   h3_gpio_hack;
 
-#ifdef ENABLE_WIDE_GPIO_COMPUTE_MODULE
-  bool uses_64_bit_;
-  volatile uint32_t *gpio_set_bits_high_;
-  volatile uint32_t *gpio_clr_bits_high_;
-  volatile uint32_t *gpio_read_bits_high_;
-#endif
+  gpio_bits_t previous_val = 0;
+
+
 };
 
 // A PinPulser is a utility class that pulses a GPIO pin. There can be various

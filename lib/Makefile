@@ -5,7 +5,7 @@
 ##
 OBJECTS=gpio.o led-matrix.o options-initialize.o framebuffer.o \
         thread.o bdf-font.o graphics.o led-matrix-c.o hardware-mapping.o \
-        pixel-mapper.o multiplex-mappers.o \
+        pixel-mapper.o multiplex-mappers.o gpio-h3.o \
 	content-streamer.o
 
 TARGET=librgbmatrix
@@ -66,6 +66,7 @@ HARDWARE_DESC?=regular
 # typically should double check cables and add TTL level converter if you
 # haven't.
 # Flag: --led-slowdown-gpio
+# DO NOT USE ON ALLWINNER H3!
 #DEFINES+=-DRGB_SLOWDOWN_GPIO=1
 
 # This allows to change the base time-unit for the on-time in the lowest
@@ -95,7 +96,9 @@ HARDWARE_DESC?=regular
 # the image will have visible brightness glitches; but for debugging, this is
 # a good choice.
 # Flag: --led-no-hardware-pulses
-#DEFINES+=-DDISABLE_HARDWARE_PULSES
+
+# ALWAYS HAVE THIS DISABLED ON ALLWINNER / H3
+DEFINES+=-DDISABLE_HARDWARE_PULSES
 
 # This allows to fix the refresh rate to a particular refresh time in
 # microseconds.
@@ -135,6 +138,8 @@ HARDWARE_DESC?=regular
 # So only switch this on if you really use the compute module and use more
 # than 3 parallel chains.
 # (this is untested right now, waiting for hardware to arrive for testing)
+
+# DO NOT USE ON ALLWINNER H3!
 #DEFINES+=-DENABLE_WIDE_GPIO_COMPUTE_MODULE
 
 # ---- Pinout options for hardware variants; usually no change needed here ----
@@ -148,6 +153,8 @@ HARDWARE_DESC?=regular
 # close together.
 # Then you can set the flag --led-gpio-mapping=adafruit-hat-pwm
 # .. or uncomment the following line.
+
+# DO NOT USE ON ALLWINNER H3!
 #HARDWARE_DESC=adafruit-hat-pwm
 
 # Typically, a Hub75 panel is split in two half displays, so that a 1:16
@@ -165,7 +172,7 @@ DEFINES+=$(USER_DEFINES)
 
 DEFINES+=-DDEFAULT_HARDWARE='"$(HARDWARE_DESC)"'
 INCDIR=../include
-CFLAGS=-W -Wall -Wextra -Wno-unused-parameter -O3 -g -fPIC $(DEFINES)
+CFLAGS=-W -Wall -Wextra -Wno-unused-parameter -O3 -g -fPIC $(DEFINES) 
 CXXFLAGS=$(CFLAGS) -fno-exceptions -std=c++11
 
 all : $(TARGET).a $(TARGET).so.1
@@ -180,6 +187,7 @@ led-matrix.o: led-matrix.cc $(INCDIR)/led-matrix.h
 thread.o : thread.cc $(INCDIR)/thread.h
 framebuffer.o: framebuffer.cc framebuffer-internal.h
 graphics.o: graphics.cc utf8-internal.h
+gpio-h3.o: gpio-h3.cc gpio-h3.h comm-h3.h
 
 %.o : %.cc compiler-flags
 	$(CXX) -I$(INCDIR) $(CXXFLAGS) -c -o $@ $<

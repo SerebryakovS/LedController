@@ -13,6 +13,33 @@ The LED-matrix library is (c) Henner Zeller <h.zeller@acm.org>, licensed with
 source and all your modifications available to the receiver of such product so
 that they have the freedom to adapt and improve).
 
+Wiring it up
+--------
+
+![Orange Pi PC Allwinner H3 GPIO](img/h3-40p.png)
+```
+    .output_enable = PA07
+    .clock         = PA19
+    .strobe        = PA14
+					 
+    .a             = PA00
+    .b             = PA10
+    .c             = PA03
+    .d             = PA13
+    .e             = PA20
+					
+    .p0_r1         = PA12
+    .p0_g1         = PA08
+    .p0_b1         = PA11
+    .p0_r2         = PA06
+    .p0_g2         = PA09
+    .p0_b2         = PA01
+```
+
+
+![Orange Pi PC Allwinner H3 Working RGB Matrix](img/OrangePI_RGB_Matrix.jpg)
+
+
 Overview
 --------
 The RGB LED matrix panels can be scored at [Sparkfun][sparkfun],
