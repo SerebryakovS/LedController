@@ -181,7 +181,7 @@ gpio_bits_t GPIO::InitOutputs(gpio_bits_t outputs,
     gpio_set_output_value(&hub75_gpio[1], 1);        
   sleep(2); 
 
-  //*h3_gpio_hack =  ((uint32_t)1<<(10)); // set PA10
+ //  *h3_gpio_hack =  ((uint32_t)1<<(10)); // set PA10
     gpio_set_output_value(&hub75_gpio[10], 1);
   	DBG_MSG("PA10 data pointer val = 0x%08X", hub75_gpio[12].dat_ptr);    
 
