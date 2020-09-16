@@ -1,20 +1,11 @@
-Controlling RGB LED display with Raspberry Pi GPIO
+Controlling RGB LED display with Orange PI (Allwinner H3 Chipset)
 ==================================================
+This is a total hack of the Raspberry PI RGB Matrix Library.
 
 A library to control commonly available 64x64, 32x32 or 16x32 RGB LED panels
-with the Raspberry Pi. Can support PWM up to 11Bit per channel, providing
-true 24bpp color with CIE1931 profile.
+with the Orange Pi PC.
 
-Supports 3 chains with many panels each on a regular Pi.
-On a Raspberry Pi 2 or 3, you can easily chain 12 panels in that chain
-(so 36 panels total), but you can theoretically stretch that to up
-to 96-ish panels (32 chain length) and still reach
-around 100Hz refresh rate with full 24Bit color (theoretical - never tested
-this; there might likely be timing problems with the panels that will creep
-up then).
-
-With fewer colors or so-called 'outdoor panels' you can control even more,
-faster.
+Supports ONE CHAIN with many panels each on a Orange PI.
 
 The LED-matrix library is (c) Henner Zeller <h.zeller@acm.org>, licensed with
 [GNU General Public License Version 2.0](http://www.gnu.org/licenses/gpl-2.0.txt)
@@ -36,19 +27,10 @@ Check out [utils/ directory for some ready-made tools](./utils) to get started
 using the library, or the [examples-api-use/](./examples-api-use) directory if
 you want to get started programming your own utils.
 
-All Raspberry Pi versions supported
+Only Orange PI PC / Allwiner H3 supported
 -----------------------------------
 
-This supports the old Raspberry Pi's Version 1 with 26 pin header and also the
-B+ models, the Pi Zero, Raspberry Pi 2 and 3 with 40 pins, as well as the
-Compute Modules which have 44 GPIOs.
-The 26 pin models can drive one chain of RGB panels, the 40 pin models
-**up to three** chains in parallel (each chain 12 or more panels long).
-The Compute Module can drive **up to 6 chains in parallel**.
-The Raspberry Pi 2 and 3 are faster and generally perferred to the older
-models (and the Pi Zero). With the faster models, the panels sometimes
-can't keep up with the speed; check out
-this [troubleshooting section](#troubleshooting) what to do.
+This is an experimental library only. 
 
 A lightweight, non-GUI, distribution such as [DietPi] is recommended.
 [Raspbian Lite][raspbian-lite] is a bit easier to get started with and
@@ -185,23 +167,6 @@ This can have values such as
   - `--led-gpio-mapping=compute-module` Additional 3 parallel chains can be used with the Compute Module.
 
 Learn more about the mappings in the [wiring documentation](wiring.md#alternative-hardware-mappings).
-
-#### GPIO speed
-
-```
---led-slowdown-gpio=<0..4>: Slowdown GPIO. Needed for faster Pis and/or slower panels (Default: 1).
-```
-
-The Raspberry Pi starting with Pi2 are putting out data too fast for almost
-all LED panels I have seen. In this case, you want to slow down writing to
-GPIO. Zero for this parameter means 'no slowdown'.
-
-The default 1 (one) typically works fine, but often you have to even go further
-by setting it to 2 (two). If you have a Raspberry Pi with a slower processor
-(Model A, A+, B+, Zero), then a value of 0 (zero) might work and is desirable.
-
-A Raspberry Pi 3 or Pi4 might even need higher values for the panels to be
-happy.
 
 #### Panel Connection
 The next most important flags describe the type and number of displays connected
