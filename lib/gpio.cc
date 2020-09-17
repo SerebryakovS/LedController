@@ -278,7 +278,7 @@ static int ReadFileToBuffer(char *buffer, size_t size, const char *filename) {
 }
 
 static RaspberryPiModel DetermineRaspberryModel() {
-  return PI_MODEL_3;
+  return PI_MODEL_4;
 }
 
 static RaspberryPiModel GetPiModel() {
