@@ -86,12 +86,12 @@ private:
 
   inline void WriteSetBits(gpio_bits_t value) {
    // *gpio_set_bits_low_ = static_cast<uint32_t>(value & 0xFFFFFFFF);
-    *h3_gpio_hack = static_cast<uint32_t>(*h3_gpio_hack | value); //static_cast<uint32_t>(value & 0xFFFFFFFF);
+    *h3_gpio_hack = gpio_port_value_cache = static_cast<uint32_t>(gpio_port_value_cache | value); //static_cast<uint32_t>(value & 0xFFFFFFFF);
   }
 
   inline void WriteClrBits(gpio_bits_t value) {
     //  *gpio_clr_bits_low_ = static_cast<uint32_t>(value & 0xFFFFFFFF);
-    *h3_gpio_hack  = static_cast<uint32_t>( *h3_gpio_hack & ~(value & 0xFFFFFFFF) );
+    *h3_gpio_hack  = gpio_port_value_cache = static_cast<uint32_t>( gpio_port_value_cache & ~(value & 0xFFFFFFFF) );
    //	__sync_synchronize();
   }
 
@@ -107,7 +107,9 @@ private:
 */
   volatile uint32_t*   h3_gpio_hack;
 
-  gpio_bits_t previous_val = 0;
+  // DO NOT read the /dev/mem PORTA value, slows down GPIO speed by a factor of 10.
+  // https://github.com/hzeller/rpi-rgb-led-matrix/issues/595#issuecomment-475971664
+  gpio_bits_t gpio_port_value_cache = 0;
 
 
 };
