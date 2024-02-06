@@ -144,22 +144,34 @@ gpio_bits_t GPIO::InitOutputs(gpio_bits_t outputs,
   }
 
   gpio_init(&hub75_gpio[ 0], "PG11"); //  7
+  DBG_MSG("PG11 data pointer val = 0x%08X", hub75_gpio[ 0].dat_ptr); 
   gpio_init(&hub75_gpio[ 1], "PA00"); // 11
+  DBG_MSG("PA00 data pointer val = 0x%08X", hub75_gpio[ 1].dat_ptr); 
   gpio_init(&hub75_gpio[ 2], "PA02"); // 13
+  DBG_MSG("PA02 data pointer val = 0x%08X", hub75_gpio[ 2].dat_ptr); 
   gpio_init(&hub75_gpio[ 3], "PA03"); // 15
+  DBG_MSG("PA03 data pointer val = 0x%08X", hub75_gpio[ 3].dat_ptr); 
   gpio_init(&hub75_gpio[ 4], "PC00"); // 19
+  DBG_MSG("PC00 data pointer val = 0x%08X", hub75_gpio[ 4].dat_ptr); 
   gpio_init(&hub75_gpio[ 5], "PC01"); // 21
+  DBG_MSG("PC01 data pointer val = 0x%08X", hub75_gpio[ 5].dat_ptr); 
   gpio_init(&hub75_gpio[ 6], "PC02"); // 23
+  DBG_MSG("PC02 data pointer val = 0x%08X", hub75_gpio[ 6].dat_ptr); 
   gpio_init(&hub75_gpio[ 7], "PG06"); //  8
+  DBG_MSG("PG06 data pointer val = 0x%08X", hub75_gpio[ 7].dat_ptr); 
   gpio_init(&hub75_gpio[ 8], "PG07"); // 10
+  DBG_MSG("PG07 data pointer val = 0x%08X", hub75_gpio[ 8].dat_ptr); 
   gpio_init(&hub75_gpio[ 9], "PA06"); // 12
+  DBG_MSG("PA06 data pointer val = 0x%08X", hub75_gpio[ 9].dat_ptr); 
   gpio_init(&hub75_gpio[10], "PG08"); // 16
+  DBG_MSG("PG08 data pointer val = 0x%08X", hub75_gpio[10].dat_ptr); 
   gpio_init(&hub75_gpio[11], "PG09"); // 18
+  DBG_MSG("PG09 data pointer val = 0x%08X", hub75_gpio[11].dat_ptr); 
   gpio_init(&hub75_gpio[12], "PA01"); // 22
+  DBG_MSG("PA01 data pointer val = 0x%08X", hub75_gpio[12].dat_ptr); 
   gpio_init(&hub75_gpio[13], "PC03"); // 24
-
-	DBG_MSG("PA00 data pointer val = 0x%08X", hub75_gpio[4].dat_ptr);  
-	DBG_MSG("PA13 data pointer val = 0x%08X", hub75_gpio[12].dat_ptr);    
+  DBG_MSG("PC03 data pointer val = 0x%08X", hub75_gpio[13].dat_ptr); 
+ 
 
 	for ( uint32_t i = 0; i < 14; i++ ) {
 		hub75_bank.gpio[i] = &hub75_gpio[i];
