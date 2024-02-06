@@ -23,8 +23,11 @@
 #include "graphics.h"
 
 // Make sure C++ is in sync with C
-static_assert(sizeof(rgb_matrix::RGBMatrix::Options) == sizeof(RGBLedMatrixOptions));
-static_assert(sizeof(rgb_matrix::RuntimeOptions) == sizeof(RGBLedRuntimeOptions));
+static_assert(sizeof(rgb_matrix::RGBMatrix::Options) == sizeof(RGBLedMatrixOptions),
+              "Size of RGBMatrix::Options and RGBLedMatrixOptions must be the same");
+
+static_assert(sizeof(rgb_matrix::RuntimeOptions) == sizeof(RGBLedRuntimeOptions),
+              "Size of RuntimeOptions and RGBLedRuntimeOptions must be the same");
 
 // Our opaque dummy structs to communicate with the c-world
 struct RGBLedMatrix {};
