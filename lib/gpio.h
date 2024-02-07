@@ -18,7 +18,7 @@
 
 #include "gpio-bits.h"
 #include <vector>
-
+#include "gpio-h3.h"
 
 
 // Putting this in our namespace to not collide with other things called like
@@ -85,14 +85,19 @@ private:
   }
 
   inline void WriteSetBits(gpio_bits_t value) {
-   // *gpio_set_bits_low_ = static_cast<uint32_t>(value & 0xFFFFFFFF);
-    *h3_gpio_hack = gpio_port_value_cache = static_cast<uint32_t>(gpio_port_value_cache | value); //static_cast<uint32_t>(value & 0xFFFFFFFF);
+    for (size_t i = 0; i < sizeof(gpio_mapping) / sizeof(gpio_mapping[0]); ++i) {
+        if (value & (1 << i)) {
+            gpio_set_output_value(&hub75_gpio[i], 1);
+        }
+    }
   }
 
   inline void WriteClrBits(gpio_bits_t value) {
-    //  *gpio_clr_bits_low_ = static_cast<uint32_t>(value & 0xFFFFFFFF);
-    *h3_gpio_hack  = gpio_port_value_cache = static_cast<uint32_t>( gpio_port_value_cache & ~(value & 0xFFFFFFFF) );
-   //	__sync_synchronize();
+    for (size_t i = 0; i < sizeof(gpio_mapping) / sizeof(gpio_mapping[0]); ++i) {
+        if (value & (1 << i)) {
+            gpio_set_output_value(&hub75_gpio[i], 0);
+        }
+    }
   }
 
 private:

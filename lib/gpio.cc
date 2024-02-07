@@ -29,17 +29,17 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "hardware-mapping.h"
+
 //static const off_t GPIO_REG_BASE=0x01C20000;
 //static const size_t GPIO_REG_OFF=0x800;
 //static const size_t GPIO_REG_LEN=0x1800;
 
 
 //static uint32_t*   h3_gpio_hack=NULL;
+
 struct gpio_t      hub75_gpio[14] = {0};
 struct gpio_bank_t hub75_bank;
-
-
-
 /*
  * nanosleep() takes longer than requested because of OS jitter.
  * In about 99.9% of the cases, this is <= 25 microcseconds on
@@ -73,6 +73,7 @@ struct gpio_bank_t hub75_bank;
  *  value above. To get a full histogram of OS overhead, set it to 0 first).
  */
 #define DEBUG_SLEEP_JITTER 0
+
 
 
 /* RPI Constants that shouldn't be used */
@@ -125,6 +126,7 @@ static volatile uint32_t *s_Timer1Mhz = NULL;
 //static volatile uint32_t *s_PWM_registers = NULL;
 //static volatile uint32_t *s_CLK_registers = NULL;
 
+
 namespace rgb_matrix {
 #define GPIO_BIT(x) (1ull << x)
 
@@ -144,34 +146,20 @@ gpio_bits_t GPIO::InitOutputs(gpio_bits_t outputs,
   }
 
   gpio_init(&hub75_gpio[ 0], "PG11"); //  7
-  DBG_MSG("PG11 data pointer val = 0x%08X", hub75_gpio[ 0].dat_ptr); 
   gpio_init(&hub75_gpio[ 1], "PA00"); // 11
-  DBG_MSG("PA00 data pointer val = 0x%08X", hub75_gpio[ 1].dat_ptr); 
-  gpio_init(&hub75_gpio[ 2], "PA02"); // 13
-  DBG_MSG("PA02 data pointer val = 0x%08X", hub75_gpio[ 2].dat_ptr); 
+  gpio_init(&hub75_gpio[ 2], "PA02"); // 13 
   gpio_init(&hub75_gpio[ 3], "PA03"); // 15
-  DBG_MSG("PA03 data pointer val = 0x%08X", hub75_gpio[ 3].dat_ptr); 
   gpio_init(&hub75_gpio[ 4], "PC00"); // 19
-  DBG_MSG("PC00 data pointer val = 0x%08X", hub75_gpio[ 4].dat_ptr); 
   gpio_init(&hub75_gpio[ 5], "PC01"); // 21
-  DBG_MSG("PC01 data pointer val = 0x%08X", hub75_gpio[ 5].dat_ptr); 
   gpio_init(&hub75_gpio[ 6], "PC02"); // 23
-  DBG_MSG("PC02 data pointer val = 0x%08X", hub75_gpio[ 6].dat_ptr); 
   gpio_init(&hub75_gpio[ 7], "PG06"); //  8
-  DBG_MSG("PG06 data pointer val = 0x%08X", hub75_gpio[ 7].dat_ptr); 
   gpio_init(&hub75_gpio[ 8], "PG07"); // 10
-  DBG_MSG("PG07 data pointer val = 0x%08X", hub75_gpio[ 8].dat_ptr); 
   gpio_init(&hub75_gpio[ 9], "PA06"); // 12
-  DBG_MSG("PA06 data pointer val = 0x%08X", hub75_gpio[ 9].dat_ptr); 
   gpio_init(&hub75_gpio[10], "PG08"); // 16
-  DBG_MSG("PG08 data pointer val = 0x%08X", hub75_gpio[10].dat_ptr); 
   gpio_init(&hub75_gpio[11], "PG09"); // 18
-  DBG_MSG("PG09 data pointer val = 0x%08X", hub75_gpio[11].dat_ptr); 
   gpio_init(&hub75_gpio[12], "PA01"); // 22
-  DBG_MSG("PA01 data pointer val = 0x%08X", hub75_gpio[12].dat_ptr); 
   gpio_init(&hub75_gpio[13], "PC03"); // 24
-  DBG_MSG("PC03 data pointer val = 0x%08X", hub75_gpio[13].dat_ptr); 
- 
+
 
 	for ( uint32_t i = 0; i < 14; i++ ) {
 		hub75_bank.gpio[i] = &hub75_gpio[i];
@@ -182,66 +170,7 @@ gpio_bits_t GPIO::InitOutputs(gpio_bits_t outputs,
 
   // Epic Hack: get the memory address to the uint32_t that controls PORTA on Allwinner H3
   // directly modify the bits here to control the GPIO output.
-  h3_gpio_hack = &*(hub75_gpio[12].dat_ptr); 
-
-  /*
-  *h3_gpio_hack = 0x00001000; // SET PA13
-  DBG_MSG("PORTA val = 0x%08X", *h3_gpio_hack);        
-  sleep(1);
-    *h3_gpio_hack = 0x00000000; // clear PA13
-    DBG_MSG("PORTA val = 0x%08X", *h3_gpio_hack);        
-    gpio_set_output_value(&hub75_gpio[1], 1);        
-  sleep(2); 
-
- //  *h3_gpio_hack =  ((uint32_t)1<<(10)); // set PA10
-    gpio_set_output_value(&hub75_gpio[10], 1);
-  	DBG_MSG("PA10 data pointer val = 0x%08X", hub75_gpio[12].dat_ptr);    
-
-    *h3_gpio_hack = ((uint32_t)1<<(20)); // enable PA20
-
-  	DBG_MSG("PORTA val = 0x%08X", *h3_gpio_hack);        
-    DBG_MSG("PORTA val calc'd = 0x%08X", ((uint32_t)1<<(20)));  
-
-  sleep(2);   
-  */
-
-
-/*
-  // Hack: for the PWM mod, the user soldered together GPIO 18 (new OE)
-  // with GPIO 4 (old OE).
-  // Since they are connected inside the HAT, want to make extra sure that,
-  // whatever the outside system set as pinmux, the old OE is _not_ also
-  // set as output so that these GPIO outputs don't fight each other.
-  //
-  // So explicitly set both of these pins as input initially, so the user
-  // can switch between the two modes "adafruit-hat" and "adafruit-hat-pwm"
-  // without trouble.
-  if (adafruit_pwm_transition_hack_needed) {
-    INP_GPIO(4);
-    INP_GPIO(18);
-    // Even with PWM enabled, GPIO4 still can not be used, because it is
-    // now connected to the GPIO18 and thus must stay an input.
-    // So reserve this bit if it is not set in outputs.
-    reserved_bits_ = GPIO_BIT(4) & ~outputs;
-  }
-
-  outputs &= ~(output_bits_ | input_bits_ | reserved_bits_);
-#ifdef ENABLE_WIDE_GPIO_COMPUTE_MODULE
-  const int kMaxAvailableBit = 45;
-  uses_64_bit_ |= (outputs >> 32) != 0;
-#else
-  const int kMaxAvailableBit = 31;
-#endif
-  for (int b = 0; b <= kMaxAvailableBit; ++b) {
-    if (outputs & GPIO_BIT(b)) {
-      INP_GPIO(b);   // for writing, we first need to set as input.
-      OUT_GPIO(b);
-    }
-  }
-  output_bits_ |= outputs;
-
-  */
-
+  // h3_gpio_hack = &*(hub75_gpio[12].dat_ptr); 
   return outputs;
 }
 
@@ -250,23 +179,6 @@ gpio_bits_t GPIO::RequestInputs(gpio_bits_t inputs) {
     fprintf(stderr, "Attempt to init inputs but not yet Init()-ialized.\n");
     return 0;
   }
-  /*
-
-  inputs &= ~(output_bits_ | input_bits_ | reserved_bits_);
-
-#ifdef ENABLE_WIDE_GPIO_COMPUTE_MODULE
-  const int kMaxAvailableBit = 45;
-  uses_64_bit_ |= (inputs >> 32) != 0;
-#else
-  const int kMaxAvailableBit = 31;
-#endif
-  for (int b = 0; b <= kMaxAvailableBit; ++b) {
-    if (inputs & GPIO_BIT(b)) {
-      INP_GPIO(b);
-    }
-  }
-  input_bits_ |= inputs;
-  */
 
   return inputs;
 }
@@ -310,41 +222,6 @@ static uint32_t *mmap_bcm_register(off_t register_offset) {
 
   return result;
 
-/*
-  off_t base = GPIO_REG_BASE;  // safe fallback guess.
-
-  int mem_fd;
-  if ((mem_fd = open("/dev/mem", O_RDWR|O_SYNC) ) < 0) {
-    // Try to fall back to /dev/gpiomem. Unfortunately, that device
-    // is implemented in a way that it _only_ supports GPIO, not the
-    // other registers we need, such as PWM or COUNTER_1Mhz, which means
-    // we only can operate with degraded performance.
-    //
-    // But, instead of failing, mmap() then silently succeeds with the
-    // unsupported offset. So bail out here.
-
-			fprintf(stderr, "Could not open /dev/mem\n");
-      return NULL;
-  }
-
-  uint32_t *result =
-    (uint32_t*) mmap(NULL,                  // Any adddress in our space will do
-                     GPIO_REG_LEN,   // Map length
-                     PROT_READ|PROT_WRITE,  // Enable r/w on GPIO registers.
-                     MAP_SHARED,
-                     mem_fd,                // File to map
-                     GPIO_REG_BASE // Offset to bcm register
-                     );
-  close(mem_fd);
-
-  if (result == MAP_FAILED) {
-    perror("mmap error: ");
-    fprintf(stderr, "MMapping from base 0x%lx, offset 0x%lx\n",
-            GPIO_REG_BASE, GPIO_REG_OFF);
-    return NULL;
-  }
-  return result;
-  */
 }
 
 static bool mmap_all_bcm_registers_once() {
@@ -355,17 +232,7 @@ static bool mmap_all_bcm_registers_once() {
   if (s_GPIO_registers == NULL) {
     return false;
   }
-/*
-  // Time measurement. Might fail when run as non-root.
-  uint32_t *timereg = mmap_bcm_register(COUNTER_1Mhz_REGISTER_OFFSET);
-  if (timereg != NULL) {
-    s_Timer1Mhz = timereg + 1;
-  }
 
-  // Hardware pin-pulser. Might fail when run as non-root.
-  s_PWM_registers  = mmap_bcm_register(GPIO_PWM_BASE_OFFSET);
-  s_CLK_registers  = mmap_bcm_register(GPIO_CLK_BASE_OFFSET);
-*/
   return true;
 }
 
@@ -377,18 +244,6 @@ bool GPIO::Init(int slowdown) {
   // registers might be needed later.
   if (!mmap_all_bcm_registers_once())
     return false;
-
-/*
-  gpio_set_bits_low_ = s_GPIO_registers + (0x1C / sizeof(uint32_t));
-  gpio_clr_bits_low_ = s_GPIO_registers + (0x28 / sizeof(uint32_t));
-  gpio_read_bits_low_ = s_GPIO_registers + (0x34 / sizeof(uint32_t));
-*/
-
-  //gpio_set_bits_low_ =  h3_gpio_hack;
-  //gpio_clr_bits_low_ =  h3_gpio_hack;
-  //gpio_read_bits_low_ =  h3_gpio_hack;
-
-  
   return true;
 }
 

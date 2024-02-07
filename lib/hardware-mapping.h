@@ -8,6 +8,31 @@ extern "C" {
 
 #include "gpio-bits.h"
 
+struct BitToGPIOMap {
+    int bit;       // Original bit number
+    char port;     // New port
+    int pin;       // New pin
+};
+
+struct gpio_t {
+	char       name[5];
+	uint32_t   base_off;
+	uint32_t   idx; 
+	uint32_t   reg_off;
+	uint32_t*  reg_ptr;
+	uint32_t*  dat_ptr;
+	uint32_t   reg_idx;
+	uint32_t   reg_clear_mask;
+	uint32_t   data_clear_mask;
+	uint32_t   old_val;
+	uint32_t   val;
+};
+
+struct gpio_bank_t {
+	struct gpio_t*  gpio[MAX_GPIO_BANK_SIZE];
+	uint32_t  size;
+};
+
 struct HardwareMapping {
   const char *name;
   int max_parallel_chains;
