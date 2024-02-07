@@ -29,8 +29,6 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "hardware-mapping.h"
-
 //static const off_t GPIO_REG_BASE=0x01C20000;
 //static const size_t GPIO_REG_OFF=0x800;
 //static const size_t GPIO_REG_LEN=0x1800;
@@ -38,8 +36,7 @@
 
 //static uint32_t*   h3_gpio_hack=NULL;
 
-struct gpio_t      hub75_gpio[14] = {0};
-struct gpio_bank_t hub75_bank;
+
 /*
  * nanosleep() takes longer than requested because of OS jitter.
  * In about 99.9% of the cases, this is <= 25 microcseconds on
@@ -160,7 +157,6 @@ gpio_bits_t GPIO::InitOutputs(gpio_bits_t outputs,
   gpio_init(&hub75_gpio[12], "PA01"); // 22
   gpio_init(&hub75_gpio[13], "PC03"); // 24
 
-
 	for ( uint32_t i = 0; i < 14; i++ ) {
 		hub75_bank.gpio[i] = &hub75_gpio[i];
 	}
@@ -172,6 +168,7 @@ gpio_bits_t GPIO::InitOutputs(gpio_bits_t outputs,
   // directly modify the bits here to control the GPIO output.
   // h3_gpio_hack = &*(hub75_gpio[12].dat_ptr); 
   return outputs;
+
 }
 
 gpio_bits_t GPIO::RequestInputs(gpio_bits_t inputs) {

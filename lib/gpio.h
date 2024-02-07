@@ -19,7 +19,10 @@
 #include "gpio-bits.h"
 #include <vector>
 #include "gpio-h3.h"
+#include "hardware-mapping.h"
 
+struct gpio_t      hub75_gpio[14] = {0};
+struct gpio_bank_t hub75_bank;
 
 // Putting this in our namespace to not collide with other things called like
 // this.
