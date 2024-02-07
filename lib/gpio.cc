@@ -17,7 +17,7 @@
 #include <inttypes.h>
 
 #include "comm-h3.h"
-#include "gpio-h3.h"
+
 #include "gpio.h"
 
 #include <assert.h>
@@ -33,7 +33,7 @@
 //static const size_t GPIO_REG_OFF=0x800;
 //static const size_t GPIO_REG_LEN=0x1800;
 
-
+struct gpio_bank_t hub75_bank;
 //static uint32_t*   h3_gpio_hack=NULL;
 
 
