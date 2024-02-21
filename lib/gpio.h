@@ -21,7 +21,7 @@
 #include "gpio-h3.h"
 #include "hardware-mapping.h"
 
-struct gpio_t      hub75_gpio[14] = {0};
+extern struct gpio_t      hub75_gpio[14];
 
 // Putting this in our namespace to not collide with other things called like
 // this.
@@ -87,7 +87,7 @@ private:
   }
 
   inline void WriteSetBits(gpio_bits_t value) {
-    for (size_t i = 0; i < 14 / sizeof(gpio_mapping[0]); ++i) {
+    for (size_t i = 0; i < 14; ++i) {
         if (value & (1 << i)) {
             gpio_set_output_value(&hub75_gpio[i], 1);
         }
@@ -95,7 +95,7 @@ private:
   }
 
   inline void WriteClrBits(gpio_bits_t value) {
-    for (size_t i = 0; i < 14 / sizeof(gpio_mapping[0]); ++i) {
+    for (size_t i = 0; i < 14; ++i) {
         if (value & (1 << i)) {
             gpio_set_output_value(&hub75_gpio[i], 0);
         }

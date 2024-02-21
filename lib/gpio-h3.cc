@@ -3,7 +3,8 @@
 
 static const off_t GPIO_REG_BASE=0x01C20000;
 static const size_t GPIO_REG_OFF=0x800;
-static const size_t GPIO_REG_LEN=0x1800;
+//static const size_t GPIO_REG_LEN=0x1800;
+static const size_t GPIO_REG_LEN=0x2E2400;
 
 static uint32_t*   p_gpio=NULL;
 
@@ -82,6 +83,28 @@ int gpio_set_output(struct gpio_t* p)
 
 	return 0;
 }
+
+int gpio_set_output_value(struct gpio_t* p, const uint32_t v) {
+    if (!(v == 1 || v == 0)) {
+        FATAL_ERRORF("v is not valid %d", v);
+        return -1;
+    }
+
+    uint32_t dv = *p->dat_ptr;
+    uint32_t mask = 1 << p->idx;
+
+    if (v == 1) {
+        dv |= mask; // Set the bit
+    } else {
+        dv &= ~mask; // Clear the bit
+    }
+
+    *p->dat_ptr = dv;
+    __sync_synchronize();
+    return 0;
+}
+
+/*
 int gpio_set_output_value(struct gpio_t* p, const uint32_t v)
 {
 	uint32_t dv = *p->dat_ptr;
@@ -90,14 +113,15 @@ int gpio_set_output_value(struct gpio_t* p, const uint32_t v)
 		return -1;
 	}
 	uint32_t mask = v << p->idx;
-	DBG_MSG("v = 0x%x, mask = 0x%x, dv=0x%x, dat_ptr=0x%x", v, mask, dv, p->dat_ptr);
+	//DBG_MSG("v = 0x%x, mask = 0x%x, dv=0x%x, dat_ptr=0x%x", v, mask, dv, p->dat_ptr);
 	dv &= p->data_clear_mask;
 	dv |= mask;
 	*p->dat_ptr = dv;
-	DBG_MSG("v = 0x%x, mask = 0x%x, dv=0x%x", v, mask, dv);
+	//DBG_MSG("v = 0x%x, mask = 0x%x, dv=0x%x", v, mask, dv);
 	__sync_synchronize();
 	return 0;
 }
+*/
 int gpio_read_input(struct gpio_t* p, uint32_t* v)
 {
 	uint32_t mask = 1 << p->idx;

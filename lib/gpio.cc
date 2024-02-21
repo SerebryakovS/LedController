@@ -32,7 +32,7 @@
 //static const off_t GPIO_REG_BASE=0x01C20000;
 //static const size_t GPIO_REG_OFF=0x800;
 //static const size_t GPIO_REG_LEN=0x1800;
-
+struct gpio_t hub75_gpio[14] = {0};
 struct gpio_bank_t hub75_bank;
 //static uint32_t*   h3_gpio_hack=NULL;
 
@@ -142,20 +142,20 @@ gpio_bits_t GPIO::InitOutputs(gpio_bits_t outputs,
     return 0;
   }
 
-  gpio_init(&hub75_gpio[ 0], "PG11"); //  7
-  gpio_init(&hub75_gpio[ 1], "PA00"); // 11
-  gpio_init(&hub75_gpio[ 2], "PA02"); // 13 
-  gpio_init(&hub75_gpio[ 3], "PA03"); // 15
-  gpio_init(&hub75_gpio[ 4], "PC00"); // 19
-  gpio_init(&hub75_gpio[ 5], "PC01"); // 21
-  gpio_init(&hub75_gpio[ 6], "PC02"); // 23
-  gpio_init(&hub75_gpio[ 7], "PG06"); //  8
-  gpio_init(&hub75_gpio[ 8], "PG07"); // 10
-  gpio_init(&hub75_gpio[ 9], "PA06"); // 12
-  gpio_init(&hub75_gpio[10], "PG08"); // 16
-  gpio_init(&hub75_gpio[11], "PG09"); // 18
-  gpio_init(&hub75_gpio[12], "PA01"); // 22
-  gpio_init(&hub75_gpio[13], "PC03"); // 24
+   gpio_init(&hub75_gpio[ 0], "PG06"); //  8 |  OE
+   gpio_init(&hub75_gpio[ 1], "PC02"); // 23 | CLK
+   gpio_init(&hub75_gpio[ 2], "PA01"); // 22 | STB
+   gpio_init(&hub75_gpio[ 3], "PC00"); // 19 |   A 
+   gpio_init(&hub75_gpio[ 4], "PG08"); // 16 |   B
+   gpio_init(&hub75_gpio[ 5], "PC01"); // 21 |   C
+   gpio_init(&hub75_gpio[ 6], "PG09"); // 18 |   D
+   gpio_init(&hub75_gpio[ 7], "PG11"); //  7 |  R1
+   gpio_init(&hub75_gpio[ 8], "PG07"); // 10 |  G1
+   gpio_init(&hub75_gpio[ 9], "PA00"); // 11 |  B1 
+   gpio_init(&hub75_gpio[10], "PA02"); // 13 |  R2
+   gpio_init(&hub75_gpio[11], "PA06"); // 12 |  G2
+   gpio_init(&hub75_gpio[12], "PA03"); // 15 |  B2
+   gpio_init(&hub75_gpio[13], "PC03"); // 24
 
 	for ( uint32_t i = 0; i < 14; i++ ) {
 		hub75_bank.gpio[i] = &hub75_gpio[i];
