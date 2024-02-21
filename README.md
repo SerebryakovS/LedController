@@ -1,4 +1,4 @@
-Controlling RGB LED display with Orange PI (Allwinner H3 Chipset)
+Controlling RGB LED display with Allwinner H3
 ============================================================
 This is a total hack of the Raspberry PI RGB Matrix Library.
 
