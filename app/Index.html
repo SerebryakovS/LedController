@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LED Controller</title>
+    <style>
+    <style>
+        body {
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        #logo-container {
+            text-align: center;
+            padding: 20px;
+            background: white;
+        }
+        #logo {
+            width: 100px;
+        }
+        .tab {
+            overflow: hidden;
+            padding: 20px;
+            max-width: 600px; 
+            margin: 20px auto;
+            display: flex; 
+            justify-content: center; 
+        }
+        .tab button {
+            background-color: #00944c;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+            font-size: 17px;
+            color: white;
+        }
+        .tab button.active {
+            background-color: #007BFF;
+            color: white;
+        }
+        .tabcontent {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-top: none;
+            max-width: 600px; 
+
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            
+        }
+        .tabcontent table {
+            width: 100%;
+            table-layout: fixed;
+        }
+        .tabcontent table td {
+            padding: 8px;
+        }
+        .tabcontent table td:first-child {
+            text-align: right;
+            padding-right: 20px;
+        }
+        input[type=text], input[type=number], input[type=color], input[type=checkbox], button {
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+            width: 100%;
+        }
+        button[type=button] {
+            background-color: #00944c;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        input[type="color"] {
+            padding-right: 30px; 
+            -webkit-appearance: none;
+            margin: 0;
+            width: 40%;
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <center>
+        <div id="logo-container">
+            <img id="logo" src="logo.png" alt="Logo">
+        </div>
+
+        <div class="tab">
+            <button class="tablinks" onclick="openTab(event, 'SetText')" id="defaultOpen">Set Text</button>
+            <button class="tablinks" onclick="openTab(event, 'SetTime')">Set Time</button>
+            <button class="tablinks" onclick="openTab(event, 'SetBlink')">Set Blink</button>
+            <button class="tablinks" onclick="openTab(event, 'SplashBoot')">Splash on Boot</button>
+        </div>
+        <div id="SetText" class="tabcontent">
+            <h2>Draw text on panel line</h2>
+            <table>
+                <tr>
+                    <td>Line Number:</td>
+                    <td><input type="number" id="line_num" name="line_num" max="3"></td>
+                </tr>
+                <tr>
+                    <td>Text:</td>
+                    <td><input type="text" id="text" name="text"></td>
+                </tr>
+                <tr>
+                    <td>Color:</td>
+                    <td>
+                        <div class="color-picker-wrapper">
+                            <input type="color" id="color" name="color" value="#FFFFFF">
+                        </div>
+                    </td>
+                </tr>
+            </table>
+            <button type="button" onclick="sendData('/set_line_text')">Send Request</button>
+        </div>
+        <div id="SetTime" class="tabcontent">
+            <h2>Show realtime-clock on panel line</h2>
+            <table>
+                <tr>
+                    <td>Line Number:</td>
+                    <td><input type="number" id="time_line_num" name="line_num" max="3"></td>
+                </tr>
+            </table>
+            <button type="button" onclick="sendData('/set_line_time')">Send Request</button>
+        </div>
+    
+        <div id="SetBlink" class="tabcontent">
+            <h2>Set panel line blinking</h2>
+            <table>
+                <tr>
+                    <td>Line Number:</td>
+                    <td><input type="number" id="blink_line_num" name="line_num" max="3"></td>
+                </tr>
+                <tr>
+                    <td>Blink Frequency (Hz):</td>
+                    <td><input type="text" id="blink_freq" name="blink_freq"></td>
+                </tr>
+                <tr>
+                    <td>Blink Duration (Sec):</td>
+                    <td><input type="text" id="blink_time" name="blink_time"></td>
+                </tr>
+            </table>
+            <button type="button" onclick="sendData('/set_line_blink')">Send Request</button>
+        </div>
+    
+        <div id="SplashBoot" class="tabcontent">
+            <h2>Show company logotype</h2>
+            <table>
+                <tr>
+                    <td>Splash status:</td>
+                    <td><input type="checkbox" id="splash" name="splash"></td>
+                </tr>
+                <tr>
+                    <td>Show IP:</td>
+                    <td><input type="checkbox" id="show_ip" name="show_ip"></td>
+                </tr>
+            </table>
+            <button type="button" onclick="sendData('/set_splasher')">Send Request</button>
+        </div>
+    
+    </center>
+
+    <script>
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+
+        // Call to display the default tab
+        document.getElementById("defaultOpen").click();
+
+        function sendData(endpoint) {
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", endpoint, true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            
+            // Prepare data based on the endpoint
+            var data = {};
+            switch(endpoint) {
+                case '/set_line_text':
+                    var lineNumValue = parseInt(document.getElementById("line_num").value, 10);
+                    var colorValue = document.getElementById("color").value;
+                    data = {
+                        line_num: lineNumValue || 1, // Default to 1 if not provided
+                        text: document.getElementById("text").value,
+                        color: colorValue === '#FFFFFF' ? "default" : colorValue // Check if color is default
+                    };
+                    break;
+                case '/set_line_time':
+                    data = {
+                        line_num: parseInt(document.getElementById("time_line_num").value, 10)
+                    };
+                    break;
+                case '/set_line_blink':
+                    data = {
+                        line_num: parseInt(document.getElementById("blink_line_num").value, 10),
+                        blink_freq: document.getElementById("blink_freq").value || "default",
+                        blink_time: document.getElementById("blink_time").value || "forever"
+                    };
+                    break;
+                case '/set_splasher':
+                    data = {
+                        splash: document.getElementById("splash").checked,
+                        show_ip: document.getElementById("show_ip").checked
+                    };
+                    break;
+                default:
+                    console.error('Invalid endpoint:', endpoint);
+                    return;
+            }
+
+            xhr.send(JSON.stringify(data));
+
+            xhr.onload = function() {
+                if (xhr.status == 200) {
+                    var response = xhr.responseText;
+                    alert("Success: " + response);
+                } else {
+                    alert("Error " + xhr.status + ": " + xhr.statusText);
+                }
+            };
+        }
+    </script>
+
+</body>
+

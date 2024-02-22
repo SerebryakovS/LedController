@@ -1,150 +1,116 @@
 #include "led-matrix.h"
-#include <Magick++.h>
-#include <unistd.h>
-#include <iostream>
+#include "graphics.h"
+#include <errno.h>
 #include <string>
+#include <fcntl.h>
+#include <unistd.h>
 #include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <sys/stat.h>
 
 using namespace rgb_matrix;
 
-volatile bool interruptReceived = false;
+volatile bool InterruptReceived = false;
 static void InterruptHandler(int signo) {
-    interruptReceived = true;
-}
-
-bool DisplayImageCenter(const char *filename, RGBMatrix *matrix) {
-    FrameCanvas *offscreenCanvas = matrix->CreateFrameCanvas();
-    offscreenCanvas->Clear();
-
-    try {
-        Magick::Image image;
-        image.read(filename);
-        image.scale(Magick::Geometry(matrix->width(), matrix->height()));
-
-	image.sharpen(1.0);
-	image.contrast(true);
-	image.normalize();
-
-
-        // Reduce the number of colors to create a posterization effect
-        image.quantizeColorSpace(Magick::RGBColorspace);
-        image.quantizeColors(16); // You can adjust the number of colors as needed
-        image.quantize();
-
-        // Calculate the x offset to center the image
-        int xOffset = (matrix->width() - image.columns()) / 2;
-        // Ensure xOffset is not negative
-        xOffset = std::max(0, xOffset);
-
-        for (size_t y = 0; y < image.rows(); ++y) {
-            for (size_t x = 0; x < image.columns(); ++x) {
-                const Magick::Color &c = image.pixelColor(x, y);
-
-                // Check if the pixel color is white
-                if (c.redQuantum() == Magick::Color::scaleDoubleToQuantum(1.0) &&
-                    c.greenQuantum() == Magick::Color::scaleDoubleToQuantum(1.0) &&
-                    c.blueQuantum() == Magick::Color::scaleDoubleToQuantum(1.0)) {
-                    // Set the pixel to black
-                    offscreenCanvas->SetPixel(x + xOffset, y, 0, 0, 0);
-                } else {
-                    // Otherwise, set the pixel color as it is
-                    offscreenCanvas->SetPixel(x + xOffset, y,
-                                              ScaleQuantumToChar(c.redQuantum()),
-                                              ScaleQuantumToChar(c.greenQuantum()),
-                                              ScaleQuantumToChar(c.blueQuantum()));
-                }
-            }
-        }
-    } catch (const std::exception &e) {
-        std::cerr << "Failed to load image: " << e.what() << std::endl;
-        return false;
-    }
-
-    matrix->SwapOnVSync(offscreenCanvas);
-    return true;
-}
-
-bool DisplayImage(const char *filename, RGBMatrix *matrix) {
-    FrameCanvas *offscreenCanvas = matrix->CreateFrameCanvas();
-    offscreenCanvas->Clear();
-
-    try {
-        Magick::Image image;
-        image.read(filename);
-        image.scale(Magick::Geometry(matrix->width(), matrix->height()));
-
-        for (size_t y = 0; y < image.rows(); ++y) {
-            for (size_t x = 0; x < image.columns(); ++x) {
-                const Magick::Color &c = image.pixelColor(x, y);
-                
-                // Check if the pixel color is white
-                if (c.redQuantum() == Magick::Color::scaleDoubleToQuantum(1.0) &&
-                    c.greenQuantum() == Magick::Color::scaleDoubleToQuantum(1.0) &&
-                    c.blueQuantum() == Magick::Color::scaleDoubleToQuantum(1.0)) {
-                    // Set the pixel to black
-                    offscreenCanvas->SetPixel(x, y, 0, 0, 0);
-                } else {
-                    // Otherwise, set the pixel color as it is
-                    offscreenCanvas->SetPixel(x, y,
-                                              ScaleQuantumToChar(c.redQuantum()),
-                                              ScaleQuantumToChar(c.greenQuantum()),
-                                              ScaleQuantumToChar(c.blueQuantum()));
-                }
-            }
-        }
-    } catch (const std::exception &e) {
-        std::cerr << "Failed to load image: " << e.what() << std::endl;
-        return false;
-    }
-
-    matrix->SwapOnVSync(offscreenCanvas);
-    return true;
-}
+  InterruptReceived = true;
+};
+int OpenNonBlockingPipe(const char* pipeName) {
+    if (mkfifo(pipeName, 0666) < 0 && errno != EEXIST) {
+        exit(-EXIT_FAILURE);
+    };
+    int PipeFd = open(pipeName, O_RDONLY | O_NONBLOCK);
+    if (PipeFd < 0) {
+        exit(-EXIT_FAILURE);
+    };
+    return PipeFd;
+};
+std::string ReadFromPipe(int PipeFd) {
+    char Buffer[128];
+    std::string Result;
+    ssize_t BytesRead = read(PipeFd, Buffer, sizeof(Buffer) - 1);
+    if (BytesRead > 0) {
+        Buffer[BytesRead] = '\0';
+        Result = std::string(Buffer);
+    };
+    return Result;
+};
+void DrawTextSegment(FrameCanvas *Canvas, rgb_matrix::Font &Font, 
+                     int XOffset, const std::string &Text, Color &_Color, 
+                     int LetterSpacing, int YPosition) {
+    rgb_matrix::DrawText(Canvas, Font, XOffset, YPosition + Font.baseline(), 
+                         _Color, NULL, Text.c_str(), LetterSpacing);
+};
 
 int main(int argc, char *argv[]) {
-    if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <image-file>\n";
-        return 1;
-    }
+  RGBMatrix::Options MatrixOptions;
+  MatrixOptions.chain_length = 6;
+  MatrixOptions.rows = 16; 
+  MatrixOptions.cols = 32; 
+  MatrixOptions.multiplexing=4;
+  MatrixOptions.parallel = 1;
+  MatrixOptions.show_refresh_rate = true;
+  rgb_matrix::RuntimeOptions RuntimeOpt;
 
-    Magick::InitializeMagick(*argv);
+  Color BackgroundColor(0, 0, 0);
+  
+  int LetterSpacing = 0;
 
-    RGBMatrix::Options matrixOptions;
-    matrixOptions.chain_length = 6;
-    matrixOptions.rows = 16; 
-    matrixOptions.cols = 32; 
-    matrixOptions.multiplexing=4;
-    matrixOptions.parallel = 1;
-    matrixOptions.show_refresh_rate = true;
-    matrixOptions.pwm_bits = 3; 
-    matrixOptions.limit_refresh_rate_hz = 100;
+  int PipeFd1 = OpenNonBlockingPipe("/tmp/pipe1");
+  int PipeFd2 = OpenNonBlockingPipe("/tmp/pipe2");
+  int PipeFd3 = OpenNonBlockingPipe("/tmp/pipe3");
+
+  const char *DefaultFont = "../fonts/8x13.bdf";
+  rgb_matrix::Font Font;
+  if (!Font.LoadFont(DefaultFont)) {
+    fprintf(stderr, "Couldn't load font '%s'\n", DefaultFont);
+    return -EXIT_FAILURE;
+  };
 
 
-    rgb_matrix::RuntimeOptions runtimeOpt;
+  RGBMatrix *Canvas = RGBMatrix::CreateFromOptions(MatrixOptions, RuntimeOpt);
+  if (Canvas == NULL){
+    return 1;
+  };
+  Canvas->SetPWMBits(1);
 
-    RGBMatrix *matrix = RGBMatrix::CreateFromOptions(matrixOptions, runtimeOpt);
-    if (matrix == nullptr) {
-        std::cerr << "Could not create matrix object.\n";
-        return 1;
-    }
+  signal(SIGTERM, InterruptHandler);
+  signal(SIGINT, InterruptHandler);
 
-    signal(SIGTERM, InterruptHandler);
-    signal(SIGINT, InterruptHandler);
+  printf("CTRL-C for exit.\n");
 
-    const char *imageFile = argv[1];
-    if (!DisplayImageCenter(imageFile, matrix)) {
-    //if (!DisplayImage(imageFile, matrix)) {
-        std::cerr << "Displaying image failed.\n";
-        delete matrix;
-        return 1;
-    }
+  FrameCanvas *OffscreenCanvas = Canvas->CreateFrameCanvas();
 
-    // Keep the image displayed until an interrupt signal is received.
-    while (!interruptReceived) {
-        sleep(1);
-    }
+  std::string LineText1 = "0";
+  std::string LineText2 = "0";
+  std::string LineText3 = "0";
+  Color Color1(255, 255, 255);
+  Color Color2(255, 255, 255);
+  Color Color3(255, 255, 255);
 
-    std::cout << "Exiting program.\n";
-    delete matrix;
-    return 0;
-}
+  while (!InterruptReceived) {
+      OffscreenCanvas->Fill(BackgroundColor.r, BackgroundColor.g, BackgroundColor.b);
+
+      std::string NewLineText1 = ReadFromPipe(PipeFd1);
+      if (!NewLineText1.empty()) LineText1 = NewLineText1;
+      std::string NewLineText2 = ReadFromPipe(PipeFd2);
+      if (!NewLineText2.empty()) LineText2 = NewLineText2;
+      std::string NewLineText3 = ReadFromPipe(PipeFd3);
+      if (!NewLineText3.empty()) LineText3 = NewLineText3;
+
+      DrawTextSegment(OffscreenCanvas, Font,   0, LineText1, Color1, LetterSpacing, 0); 
+      DrawTextSegment(OffscreenCanvas, Font,  64, LineText2, Color2, LetterSpacing, 0);
+      DrawTextSegment(OffscreenCanvas, Font, 128, LineText3, Color3, LetterSpacing, 0);
+
+      OffscreenCanvas = Canvas->SwapOnVSync(OffscreenCanvas);
+      usleep(100 * 1000); 
+  };
+  Canvas->Clear();
+  delete Canvas;
+  close(PipeFd1);
+  close(PipeFd2);
+  close(PipeFd3);
+  return 0;
+};
