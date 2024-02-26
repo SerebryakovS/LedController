@@ -22,6 +22,7 @@
         .tab {
             overflow: hidden;
             padding: 20px;
+            font-weight: bold;
             max-width: 600px; 
             margin: 20px auto;
             display: flex; 
@@ -98,10 +99,10 @@
         </div>
 
         <div class="tab">
-            <button class="tablinks" onclick="openTab(event, 'SetText')" id="defaultOpen">Set Text</button>
-            <button class="tablinks" onclick="openTab(event, 'SetTime')">Set Time</button>
-            <button class="tablinks" onclick="openTab(event, 'SetBlink')">Set Blink</button>
-            <button class="tablinks" onclick="openTab(event, 'SplashBoot')">Splash on Boot</button>
+            <button class="tablinks" onclick="openTab(event, 'SetText')" id="defaultOpen">Text</button>
+            <button class="tablinks" onclick="openTab(event, 'SetTime')">Clock</button>
+            <button class="tablinks" onclick="openTab(event, 'SetBlink')">Blink</button>
+            <button class="tablinks" onclick="openTab(event, 'SplashBoot')">Splash</button>
         </div>
         <div id="SetText" class="tabcontent">
             <h2>Draw text on panel line</h2>
@@ -156,7 +157,7 @@
         </div>
     
         <div id="SplashBoot" class="tabcontent">
-            <h2>Show company logotype</h2>
+            <h2>Company logotype viewer</h2>
             <table>
                 <tr>
                     <td>Splash status:</td>
@@ -167,7 +168,7 @@
                     <td><input type="checkbox" id="show_ip" name="show_ip"></td>
                 </tr>
             </table>
-            <button type="button" onclick="sendData('/set_splasher')">Send Request</button>
+            <button type="button" onclick="sendData('/splash_on_boot')">Send Request</button>
         </div>
     
     </center>

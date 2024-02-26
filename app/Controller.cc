@@ -100,9 +100,9 @@ int main(int argc, char *argv[]) {
       std::string NewLineText3 = ReadFromPipe(PipeFd3);
       if (!NewLineText3.empty()) LineText3 = NewLineText3;
 
-      DrawTextSegment(OffscreenCanvas, Font,   0, LineText1, Color1, LetterSpacing, 0); 
-      DrawTextSegment(OffscreenCanvas, Font,  64, LineText2, Color2, LetterSpacing, 0);
-      DrawTextSegment(OffscreenCanvas, Font, 128, LineText3, Color3, LetterSpacing, 0);
+      DrawTextSegment(OffscreenCanvas, Font,   1, LineText1, Color1, LetterSpacing, 0); 
+      DrawTextSegment(OffscreenCanvas, Font,  65, LineText2, Color2, LetterSpacing, 0);
+      DrawTextSegment(OffscreenCanvas, Font, 129, LineText3, Color3, LetterSpacing, 0);
 
       OffscreenCanvas = Canvas->SwapOnVSync(OffscreenCanvas);
       usleep(100 * 1000); 
