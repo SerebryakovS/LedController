@@ -90,6 +90,22 @@
         input[type="color"]::-webkit-color-swatch {
             border: none;
         }
+		
+		.color-button {
+			width: 24px;
+			height: 24px;
+			border: none;
+			margin: 2px;
+			cursor: pointer;
+			display: inline-block;
+			border-radius: 12px;
+		}
+		.color-button:focus {
+			outline: none;
+		}
+		.color-button:active {
+			opacity: 0.6;
+		}
     </style>
 </head>
 <body>
@@ -116,12 +132,19 @@
                     <td><input type="text" id="text" name="text"></td>
                 </tr>
                 <tr>
-                    <td>Color:</td>
-                    <td>
-                        <div class="color-picker-wrapper">
-                            <input type="color" id="color" name="color" value="#FFFFFF">
-                        </div>
-                    </td>
+				<td>Color:</td>
+					<td>
+						<input type="hidden" id="selectedColor" value="#FFFFFF">
+						<div class="color-picker-wrapper">
+							<button class="color-button" style="background-color: #FF0000;" onclick="setColor('#FF0000')"></button>
+							<button class="color-button" style="background-color: #00FF00;" onclick="setColor('#00FF00')"></button>
+							<button class="color-button" style="background-color: #0000FF;" onclick="setColor('#0000FF')"></button>
+							<button class="color-button" style="background-color: #FFFF00;" onclick="setColor('#FFFF00')"></button> <!-- R+G -->
+							<button class="color-button" style="background-color: #FF00FF;" onclick="setColor('#FF00FF')"></button> <!-- R+B -->
+							<button class="color-button" style="background-color: #00FFFF;" onclick="setColor('#00FFFF')"></button> <!-- G+B -->
+							<button class="color-button" style="background-color: #FFFFFF;" onclick="setColor('#FFFFFF')"></button> <!-- R+G+B -->
+						</div>
+					</td>
                 </tr>
             </table>
             <button type="button" onclick="sendData('/set_line_text')">Send Request</button>
@@ -146,11 +169,11 @@
                 </tr>
                 <tr>
                     <td>Blink Frequency (Hz):</td>
-                    <td><input type="text" id="blink_freq" name="blink_freq"></td>
+                    <td><input type="number" id="blink_freq" name="blink_freq"></td>
                 </tr>
                 <tr>
                     <td>Blink Duration (Sec):</td>
-                    <td><input type="text" id="blink_time" name="blink_time"></td>
+                    <td><input type="number" id="blink_time" name="blink_time"></td>
                 </tr>
             </table>
             <button type="button" onclick="sendData('/set_line_blink')">Send Request</button>
@@ -160,20 +183,20 @@
             <h2>Company logotype viewer</h2>
             <table>
                 <tr>
-                    <td>Splash status:</td>
-                    <td><input type="checkbox" id="splash" name="splash"></td>
-                </tr>
-                <tr>
                     <td>Show IP:</td>
                     <td><input type="checkbox" id="show_ip" name="show_ip"></td>
                 </tr>
             </table>
-            <button type="button" onclick="sendData('/splash_on_boot')">Send Request</button>
+            <button type="button" onclick="sendData('/set_splasher')">Send Request</button>
         </div>
     
     </center>
 
     <script>
+	
+		function setColor(colorValue) {
+			document.getElementById("selectedColor").value = colorValue;
+		}
         function openTab(evt, tabName) {
             var i, tabcontent, tablinks;
             tabcontent = document.getElementsByClassName("tabcontent");
@@ -201,7 +224,7 @@
             switch(endpoint) {
                 case '/set_line_text':
                     var lineNumValue = parseInt(document.getElementById("line_num").value, 10);
-                    var colorValue = document.getElementById("color").value;
+                    var colorValue = document.getElementById("selectedColor").value;
                     data = {
                         line_num: lineNumValue || 1, // Default to 1 if not provided
                         text: document.getElementById("text").value,
@@ -216,13 +239,12 @@
                 case '/set_line_blink':
                     data = {
                         line_num: parseInt(document.getElementById("blink_line_num").value, 10),
-                        blink_freq: document.getElementById("blink_freq").value || "default",
-                        blink_time: document.getElementById("blink_time").value || "forever"
+                        blink_freq: parseFloat(document.getElementById("blink_freq").value),
+                        blink_time: parseFloat(document.getElementById("blink_time").value)
                     };
                     break;
                 case '/set_splasher':
                     data = {
-                        splash: document.getElementById("splash").checked,
                         show_ip: document.getElementById("show_ip").checked
                     };
                     break;

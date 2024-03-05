@@ -3,6 +3,7 @@
 SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
 REST_PORT=13222
 LOGO_PATH="$(dirname "$0")/logo.png"
+COMMANDS_PIPE="/tmp/LedCommandsPipe"
 
 RunHTTPServer() {
     socat TCP-LISTEN:$REST_PORT,fork,reuseaddr SYSTEM:"$SCRIPT_PATH APIRequestsHandler"
@@ -13,12 +14,18 @@ ServeHTMLPage() {
     cat "$(dirname "$SCRIPT_PATH")/Index.html"
 }
 
+KillProcess(){
+	if pgrep -x "$1" >/dev/null; then
+        pkill $1
+    fi;
+}
+
 KillStart(){
     if pgrep -x "$1" >/dev/null; then
         pkill $1
     fi;
     if ! pgrep -x "$2" >/dev/null; then
-        "$(dirname "$SCRIPT_PATH")/$2" -a &
+        "$(dirname "$SCRIPT_PATH")/$2" $3 &
         sleep 0.5;
     fi;
 }
@@ -56,33 +63,55 @@ APIRequestsHandler() {
             LineText=$(echo "$Body" | jq ".text")
             LineColor=$(echo "$Body" | jq ".color")
             if [[ $LineNum -ge 1 && $LineNum -le 3 ]]; then
-                PipePath="/tmp/pipe$LineNum"
-		printf ${LineText//\"/} > "$PipePath"
+                Command="{\"cmd\":\"set_line_text\",\"line_num\":$LineNum,\"text\":$LineText,\"color\":$LineColor}"
+				echo "$Command" > "$COMMANDS_PIPE"
                 echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"success\"}"
             else
-                echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"error\": \"Invalid Line Number\"}"
+                echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"error\": \"Invalid line number\"}"
             fi;
             ;;
         "/set_line_time")
-            KillStart Splasher Controller
-            LineNum=$(echo "$Body" | jq ".line_num")
-            # Implement your logic for setting line time here
-            echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"success\", \"message\": \"Time set on line $LineNum\"}"
-            ;;
-        "/set_line_blink")
-            KillStart Splasher Controller
-            LineNum=$(echo "$Body" | jq ".line_num")
-            BlinkFreq=$(echo "$Body" | jq ".blink_freq")
-            BlinkTime=$(echo "$Body" | jq ".blink_time")
-            # Implement your logic for setting line blink here
-            echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"success\", \"message\": \"Blink set on line $LineNum with frequency $BlinkFreq and duration $BlinkTime\"}"
-            ;;
+			KillStart Splasher Controller
+			LineNum=$(echo "$Body" | jq ".line_num")
+			PipePath="/tmp/LedCommandsPipe"
+			printf '{"cmd":"set_line_time", "line_num":%s}' "$LineNum" > "$PipePath"
+			echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"success\"}"
+			;;
+			"/set_line_blink")
+				KillStart Splasher Controller
+				LineNum=$(echo "$Body" | jq ".line_num");
+				BlinkFreq=$(echo "$Body" | jq ".blink_freq");
+				BlinkDuration=$(echo "$Body" | jq -r ".blink_time")
+
+				# Check if BlinkFreq is a valid number, otherwise set a default value
+				if ! [[ $BlinkFreq =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+					BlinkFreq=1 # Set a default frequency value if necessary
+				else
+					BlinkFreq=$(echo "$BlinkFreq" | bc -l) # Ensure BlinkFreq is treated as a decimal number
+				fi
+
+				# Check if BlinkDuration is a valid number, otherwise set a default value
+				if ! [[ $BlinkDuration =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+					BlinkDuration=10 # Default duration if input is not a valid number
+				else
+					BlinkDuration=$(echo "$BlinkDuration" | bc -l) # Ensure BlinkDuration is treated as a decimal number
+				fi
+				
+				# Now, handle the command with valid BlinkFreq and BlinkDuration
+				Command="{\"cmd\":\"set_line_blink\",\"line_num\":$LineNum,\"blink_freq\":$BlinkFreq,\"blink_time\":$BlinkDuration}"
+				echo "$Command" > "$COMMANDS_PIPE"
+				echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"success\"}"
+				;;
         "/set_splasher")
-            KillStart Controller Splasher
-            Splash=$(echo "$Body" | jq ".splash")
-            ShowIP=$(echo "$Body" | jq ".show_ip")
-            # Implement your logic for splash on boot here
-            echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"success\", \"message\": \"Splash on boot set to $Splash, show IP set to $ShowIP\"}"
+			KillProcess Splasher;
+			ShowIP=$(echo "$Body" | jq ".show_ip")
+            if [[ "$ShowIP" == "true" ]];then
+				echo "HERE"
+				KillStart Controller Splasher -a
+			else
+				KillStart Controller Splasher
+			fi;
+            echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"success\"}"
             ;;
         *)
             echo -ne "HTTP/1.1 404 Not Found\r\nContent-Type: application/json\r\n\r\n{\"status\": \"error\", \"message\": \"Endpoint not found\"}"

@@ -1,5 +1,5 @@
-CXXFLAGS=-std=c++11 -O3 -W -Wall -Wextra -Wno-unused-parameter -D_FILE_OFFSET_BITS=64
-OBJECTS=Controller.o Splasher.o
+CXXFLAGS=-std=c++11 -O3 -W -Wall -Wextra -Wno-unused-parameter
+OBJECTS=Controller.o Splasher.o Json.o
 BINARIES=Controller Splasher
 
 RGB_LIB_DISTRIBUTION=..
@@ -7,7 +7,7 @@ RGB_INCDIR=$(RGB_LIB_DISTRIBUTION)/include
 RGB_LIBDIR=$(RGB_LIB_DISTRIBUTION)/lib
 RGB_LIBRARY_NAME=rgbmatrix
 RGB_LIBRARY=$(RGB_LIBDIR)/lib$(RGB_LIBRARY_NAME).a
-LDFLAGS+=-L$(RGB_LIBDIR) -l$(RGB_LIBRARY_NAME) -lrt -lm -lpthread
+LDFLAGS+=-L$(RGB_LIBDIR) -l$(RGB_LIBRARY_NAME) -lrt -lm -lpthread -L/usr/local/lib
 
 # Imagemagic and AV flags, only needed if actually compiled.
 MAGICK_CXXFLAGS?=$(shell GraphicsMagick++-config --cppflags --cxxflags)
@@ -20,14 +20,18 @@ all : $(BINARIES)
 $(RGB_LIBRARY): FORCE
 	$(MAKE) -C $(RGB_LIBDIR)
 
-Controller: Controller.o $(RGB_LIBRARY)
-	$(CXX) $(CXXFLAGS) Controller.o -o $@ $(LDFLAGS)
+Controller: Controller.o Json.o $(RGB_LIBRARY)
+	$(CXX) $(CXXFLAGS) Controller.o Json.o -o $@ $(LDFLAGS) -lcjson
+
+SinglePanel: SinglePanel.o $(RGB_LIBRARY)
+	$(CXX) $(CXXFLAGS) SinglePanel.o -o $@ $(LDFLAGS)
+
 
 Splasher: Splasher.o $(RGB_LIBRARY)
 	$(CXX) $(CXXFLAGS) Splasher.o -o $@ $(LDFLAGS) $(MAGICK_LDFLAGS)
 
 %.o : %.cc
-	$(CXX) -I$(RGB_INCDIR) -I$(CROW_INCDIR) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) -I$(RGB_INCDIR) $(CXXFLAGS) -c -o $@ $<
 
 Splasher.o : Splasher.cc
 	$(CXX) -I$(RGB_INCDIR) $(CXXFLAGS) $(MAGICK_CXXFLAGS) -c -o $@ $<
