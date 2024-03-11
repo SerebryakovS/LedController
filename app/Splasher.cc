@@ -8,6 +8,8 @@
 #include <ifaddrs.h>
 #include "graphics.h"
 
+std::string FontsPath;
+
 using namespace rgb_matrix;
 
 std::string GetIpAddress() {
@@ -39,15 +41,16 @@ std::string GetIpAddress() {
 };
 
 void DrawIPAddress(RGBMatrix *Matrix, RGBMatrix::Options *MatrixOptions, const std::string &IpAddress, FrameCanvas *OffscreenCanvas) {
-    rgb_matrix::Font Font;
-    Font.LoadFont("../fonts/4x6.bdf");
+    rgb_matrix::Font Font; 
+	if (!Font.LoadFont((FontsPath + "4x6.bdf").c_str())){
+		printf("_____[ERR]: Could not load font..\n");
+	};
     int StartPanelNum = 5;
     int XOffset = StartPanelNum * MatrixOptions->cols;
     int TextLength = 4 * IpAddress.length(); 
     XOffset -= TextLength / 2;
     Color _Color(255, 255, 0);
-//    rgb_matrix::DrawText(OffscreenCanvas, Font, XOffset, Font.baseline(), _Color, nullptr, IpAddress.c_str(), 0);
-rgb_matrix::DrawText(OffscreenCanvas, Font, XOffset, MatrixOptions->cols/2 - Font.baseline(), _Color, nullptr, IpAddress.c_str(), 0);
+	rgb_matrix::DrawText(OffscreenCanvas, Font, XOffset, MatrixOptions->cols/2 - Font.baseline(), _Color, nullptr, IpAddress.c_str(), 0);
 };
 
 volatile bool InterruptReceived = false;
@@ -120,7 +123,7 @@ int ViewSplashScreen(bool ShowIP) {
 
 
     FrameCanvas *OffscreenCanvas = Matrix->CreateFrameCanvas();
-
+	
     if(!DisplayLogoPatternCenter(Matrix, &MatrixOptions, OffscreenCanvas)){
         std::cerr << "Displaying image failed.\n";
         delete Matrix;
@@ -150,6 +153,10 @@ int main(int argc, char *argv[]){
         if (strcmp(argv[Idx], "-a") == 0) {
             ShowIP = true;
         };
+    };	
+    FontsPath = argv[1];
+    if (FontsPath.back() != '/') {
+        FontsPath += "/";
     };
     ViewSplashScreen(ShowIP);
 };

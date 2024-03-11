@@ -2,6 +2,7 @@
 
 SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
 REST_PORT=13222
+FONTS_PATH="$(dirname "$0")"/../fonts/
 LOGO_PATH="$(dirname "$0")/logo.png"
 COMMANDS_PIPE="/tmp/LedCommandsPipe"
 
@@ -22,10 +23,10 @@ KillProcess(){
 
 KillStart(){
     if pgrep -x "$1" >/dev/null; then
-        pkill $1
+        pkill $1 
     fi;
     if ! pgrep -x "$2" >/dev/null; then
-        "$(dirname "$SCRIPT_PATH")/$2" $3 &
+        "$(dirname "$SCRIPT_PATH")/$2" $FONTS_PATH $3 &
         sleep 0.5;
     fi;
 }
@@ -120,8 +121,9 @@ APIRequestsHandler() {
 }
 
 Main(){
-    "$(dirname "$SCRIPT_PATH")/Splasher" -a &
-    RunHTTPServer 
+	sleep 10;
+    eval "$(dirname "$SCRIPT_PATH")/Splasher" $FONTS_PATH -a &
+	RunHTTPServer 
 };
 
 if [ $# -eq 0 ]; then

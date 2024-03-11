@@ -58,6 +58,12 @@ void DrawTextSegment(FrameCanvas *Canvas, rgb_matrix::Font &Font,
 };
 
 int main(int argc, char *argv[]) {
+	
+    std::string FontsPath = argv[1];
+    if (FontsPath.back() != '/') {
+        FontsPath += "/";
+    };
+	
 	RGBMatrix::Options MatrixOptions;
 	MatrixOptions.chain_length = 6;
 	MatrixOptions.rows = 16; 
@@ -70,13 +76,11 @@ int main(int argc, char *argv[]) {
 	Color BackgroundColor(0, 0, 0);
 	int LetterSpacing = 0;
 	int IncomingCommandsPipe = OpenNonBlockingPipe("/tmp/LedCommandsPipe");
-
-	const char *DefaultFont = "../fonts/8x13.bdf";
-	rgb_matrix::Font Font;
-	if (!Font.LoadFont(DefaultFont)) {
-		fprintf(stderr, "Couldn't load font '%s'\n", DefaultFont);
-		return -EXIT_FAILURE;
-	};
+	rgb_matrix::Font AFont; AFont.LoadFont((FontsPath + "8x13.bdf").c_str()); //  8 symbols
+	rgb_matrix::Font BFont; BFont.LoadFont((FontsPath + "7x13.bdf").c_str()); //  9 symbols
+	rgb_matrix::Font CFont; CFont.LoadFont((FontsPath + "6x13.bdf").c_str()); // 10 symbols
+	rgb_matrix::Font *SetFont;
+	
 	RGBMatrix *Canvas = RGBMatrix::CreateFromOptions(MatrixOptions, RuntimeOpt);
 	if (Canvas == NULL){
 		return 1;
@@ -108,19 +112,23 @@ int main(int argc, char *argv[]) {
                     LineTexts[LineIndex] = std::string(Request.LineText);
                     Colors[LineIndex] = Request.LineColor; 
 					BlinkStates[LineIndex].IsBlinking = false;
+					if (TimeDisplayLine == Request.LineNumber){
+						TimeDisplayLine = -1;
+					};
 				};
 			} else if (CommandName == "set_line_time") {
 				SetLineTimeRequest Request;
 				if (ParseSetLineTimeRequest(NewCommandPacket.c_str(), &Request) && Request.LineNumber >= 1 && Request.LineNumber <= 3) {
 					int LineIndex = Request.LineNumber -1;
 					if (TimeDisplayLine > 0){
-						LineTexts[LineIndex] = "0";
-						Colors[LineIndex] = Color(255, 255, 255);
+						LineTexts[TimeDisplayLine-1] = "0";
 					}
 					if (TimeDisplayLine == Request.LineNumber) {
 						TimeDisplayLine = -1;
 					} else {
+						
 						TimeDisplayLine = Request.LineNumber;
+						Colors[LineIndex] = Color(255, 255, 255);
 					};
 					BlinkStates[LineIndex].IsBlinking = false;
 				};
@@ -151,7 +159,15 @@ int main(int argc, char *argv[]) {
 				};
 			};
 			int XOffset = 1 + 64 * Idx;
-			DrawTextSegment(OffscreenCanvas, Font, XOffset, LineTexts[Idx], Colors[Idx], LetterSpacing, 0);
+			size_t TextLength = LineTexts[Idx].length();
+			if (TextLength <= 8){
+				SetFont = &AFont;
+			} else if (TextLength == 9){
+				SetFont = &BFont;
+			} else if (TextLength  > 9){
+				SetFont = &CFont;
+			};
+			DrawTextSegment(OffscreenCanvas, *SetFont, XOffset, LineTexts[Idx], Colors[Idx], LetterSpacing, 0);
 		};
 		
 		OffscreenCanvas = Canvas->SwapOnVSync(OffscreenCanvas);
