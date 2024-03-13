@@ -8,18 +8,18 @@ COMMANDS_PIPE="/tmp/LedCommandsPipe"
 
 RunHTTPServer() {
     socat TCP-LISTEN:$REST_PORT,fork,reuseaddr SYSTEM:"$SCRIPT_PATH APIRequestsHandler"
-}
+};
 
 ServeHTMLPage() {
     echo -ne "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n"
     cat "$(dirname "$SCRIPT_PATH")/Index.html"
-}
+};
 
 KillProcess(){
 	if pgrep -x "$1" >/dev/null; then
         pkill $1
     fi;
-}
+};
 
 KillStart(){
     if pgrep -x "$1" >/dev/null; then
@@ -29,7 +29,18 @@ KillStart(){
         "$(dirname "$SCRIPT_PATH")/$2" $FONTS_PATH $3 &
         sleep 0.5;
     fi;
-}
+};
+
+ProcessLine() {
+    local LineNum="$1"; local LineText="$2"; local LineColor="$3";
+    if [[ $LineNum -ge 1 && $LineNum -le 3 ]]; then
+        Command="{\"cmd\":\"set_line_text\",\"line_num\":$LineNum,\"text\":$LineText,\"color\":$LineColor}"
+        echo "$Command" > "$COMMANDS_PIPE"
+        echo "success"
+    else
+        echo "error: Invalid line number"
+    fi;
+};
 
 APIRequestsHandler() {
     read -r RequestMethod RequestPath RequestProtocol
@@ -53,24 +64,48 @@ APIRequestsHandler() {
         return
     fi;
 
-    if [[ $ContentLength -gt 0 ]]; then
-        IFS= read -r -n "$ContentLength" Body
-    fi;
-
+	if [[ $ContentLength -gt 0 ]]; then
+		read -r -d '' -n "$ContentLength" Body <&0
+	fi
+	echo $Body > /tmp/tempo;
+	
+	
     case "$RequestPath" in
         "/set_line_text")
             KillStart Splasher Controller
             LineNum=$(echo "$Body" | jq ".line_num")
             LineText=$(echo "$Body" | jq ".text")
             LineColor=$(echo "$Body" | jq ".color")
-            if [[ $LineNum -ge 1 && $LineNum -le 3 ]]; then
-                Command="{\"cmd\":\"set_line_text\",\"line_num\":$LineNum,\"text\":$LineText,\"color\":$LineColor}"
-				echo "$Command" > "$COMMANDS_PIPE"
-                echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"success\"}"
-            else
-                echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"error\": \"Invalid line number\"}"
-            fi;
-            ;;
+			ProcessLineResult=$(ProcessLine "$LineNum" "$LineText" "$LineColor")
+			if [[ "$ProcessLineResult" == "success" ]]; then
+				echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"success\"}"
+			else
+				echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"error\": \"$ProcessLineResult\"}"
+			fi
+			;;
+		"/set_all_lines")
+			KillStart Splasher Controller
+			LinesOut=$(echo "$Body" | jq -c ".lines_out[]");
+			Status="success"; ErrorMessage="";
+			echo "$LinesOut" | while read -r Line; do
+				LineNum=$(echo "$Line" | jq ".line_num")
+				LineText=$(echo "$Line" | jq ".text")
+				LineColor=$(echo "$Line" | jq ".color")
+				ProcessLineResult=$(ProcessLine "$LineNum" "$LineText" "$LineColor");
+				if [[ "$ProcessLineResult" != "success" ]]; then
+					Status="error"
+					ErrorMessage=$ProcessLineResult;
+					break;
+				else
+					sleep 0.2; # some time for panel to refresh
+				fi;
+			done
+			if [[ "$Status" == "success" ]]; then
+				echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"success\"}"
+			else
+				echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"error\", \"message\": \"$ErrorMessage\"}"
+			fi
+			;;
         "/set_line_time")
 			KillStart Splasher Controller
 			LineNum=$(echo "$Body" | jq ".line_num")
@@ -118,7 +153,7 @@ APIRequestsHandler() {
             echo -ne "HTTP/1.1 404 Not Found\r\nContent-Type: application/json\r\n\r\n{\"status\": \"error\", \"message\": \"Endpoint not found\"}"
             ;;
     esac
-}
+};
 
 Main(){
 	sleep 10;

@@ -16,27 +16,44 @@ sudo timedatectl set-timezone Asia/Almaty
 
 ### Rest API
 
+POST set_line_text
 ```
-POST set_line_text{
+{
 	"line_num" : 1, // available lines: (1,2,3)
 	"text" : "123456", // color hex value
 	"color" : "FFFFFF" // used colors: (FF0000, 00FF00, 0000FF, FFFF00, FF00FF, 00FFFF)
 }
 ```
+POST set_all_lines
 ```
-POST set_line_time{
+{
+	"lines_out" : [
+		{
+			"line_num" : 1,
+			"text" : "123456", 
+			"color" : "FFFFFF" 
+		},
+		...
+	]
+}
+```
+POST set_line_time
+```
+{
 	"line_num" : 1
 }
 ```
+POST set_line_blink
 ```
-POST set_line_blink{
+{
 	"line_num" : 1,
 	"blink_freq" : "1",  // [Hz], recommended range: (1,10)
 	"blink_time" : "10"  // [Sec]
 }
 ```
+POST set_splasher
 ```
-POST set_splasher{
+{
 	"show_ip" : true | false 
 }
 ```
