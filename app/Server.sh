@@ -65,11 +65,12 @@ APIRequestsHandler() {
     fi;
 
 	if [[ $ContentLength -gt 0 ]]; then
-		read -r -d '' -n "$ContentLength" Body <&0
-	fi
-	echo $Body > /tmp/tempo;
-	
-	
+		Body=$(timeout 1 cat)
+		if [ $? -ne 0 ]; then
+			echo "Reading request body timed out" >&2
+		fi;
+	fi;
+	echo $Body > /tmp/LastRequestBody;
     case "$RequestPath" in
         "/set_line_text")
             KillStart Splasher Controller
