@@ -1,7 +1,11 @@
 
 #include "Controller.h"
 #include "led-matrix.h"
+#include <fstream>
 #include <chrono>
+
+#define COMMANDS_PIPE "/tmp/LedCommandsPipe"
+#define USED_TEXTS    "/tmp/LedTexts"
 
 volatile bool InterruptReceived = false;
 static void InterruptHandler(int signo) {
@@ -40,6 +44,15 @@ int OpenNonBlockingPipe(const char* pipeName) {
 	};
 	return PipeFd;
 };
+
+void UpdateLedTextsFile(const std::vector<std::string>& LineTexts) {
+    std::ofstream File(USED_TEXTS);
+    for (const auto& Text : LineTexts) {
+        File << Text << std::endl;
+    };
+    File.close();
+};
+
 std::string ReadFromPipe(int PipeFd) {
 	char Buffer[128];
 	std::string Result;
@@ -75,7 +88,7 @@ int main(int argc, char *argv[]) {
 
 	Color BackgroundColor(0, 0, 0);
 	int LetterSpacing = 0;
-	int IncomingCommandsPipe = OpenNonBlockingPipe("/tmp/LedCommandsPipe");
+	int IncomingCommandsPipe = OpenNonBlockingPipe(COMMANDS_PIPE);
 	rgb_matrix::Font AFont; AFont.LoadFont((FontsPath + "8x13.bdf").c_str()); //  8 symbols
 	rgb_matrix::Font BFont; BFont.LoadFont((FontsPath + "7x13.bdf").c_str()); //  9 symbols
 	rgb_matrix::Font CFont; CFont.LoadFont((FontsPath + "6x13.bdf").c_str()); // 10 symbols
@@ -115,6 +128,7 @@ int main(int argc, char *argv[]) {
 					if (TimeDisplayLine == Request.LineNumber){
 						TimeDisplayLine = -1;
 					};
+					UpdateLedTextsFile(LineTexts);
 				};
 			} else if (CommandName == "set_line_time") {
 				SetLineTimeRequest Request;

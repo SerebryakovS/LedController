@@ -5,6 +5,8 @@ REST_PORT=13222
 FONTS_PATH="$(dirname "$0")"/../fonts/
 LOGO_PATH="$(dirname "$0")/logo.png"
 COMMANDS_PIPE="/tmp/LedCommandsPipe"
+COMMANDS_RETRIES=3
+USED_TEXTS="/tmp/LedTexts"
 
 RunHTTPServer() {
     socat TCP-LISTEN:$REST_PORT,fork,reuseaddr SYSTEM:"$SCRIPT_PATH APIRequestsHandler"
@@ -33,12 +35,36 @@ KillStart(){
 
 ProcessLine() {
     local LineNum="$1"; local LineText="$2"; local LineColor="$3";
+	local Retries=COMMANDS_RETRIES;
+    local Success=false;
     if [[ $LineNum -ge 1 && $LineNum -le 3 ]]; then
-        Command="{\"cmd\":\"set_line_text\",\"line_num\":$LineNum,\"text\":$LineText,\"color\":$LineColor}"
-        echo "$Command" > "$COMMANDS_PIPE"
-        echo "success"
+        while [[ $Retries -gt 0 && $Success == false ]]; do
+            Command="{\"cmd\":\"set_line_text\",\"line_num\":$LineNum,\"text\":$LineText,\"color\":$LineColor}"
+            echo "$Command" > "$COMMANDS_PIPE"
+            sleep 2;
+			if VerifyLineText "$LineNum" "$LineText"; then
+                Success=true;
+                echo "success";
+            else
+                ((Retries--));
+            fi;
+        done;
+        if [[ $Success == false ]]; then
+            echo "error: Failed to set text after retries"
+        fi;
     else
         echo "error: Invalid line number"
+    fi;
+};
+
+VerifyLineText() {
+    local LineNum="$1"; local ExpectedText="$2";
+    local ActualText=$(sed "${LineNum}q;d" "$USED_TEXTS")
+    ExpectedText=${ExpectedText//\"/}
+    if [[ "$ActualText" == "$ExpectedText" ]]; then
+        return 0 # true
+    else
+        return 1 # false
     fi;
 };
 
