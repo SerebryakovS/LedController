@@ -13,6 +13,13 @@ don't forget to configure system timezone(if needed):
 ```
 sudo timedatectl set-timezone Asia/Almaty
 ```
+in root folder of project lc.service file located. Here you need to change software path and put to:
+```
+cp lc.service /etc/systemd/system/lc.service
+systemctl reload-daemon
+systemctl enable lc.service
+systemctl start lc.service
+```
 
 ### Rest API
 
