@@ -102,9 +102,13 @@ bool DisplayLogoPatternCenter(RGBMatrix *Matrix, RGBMatrix::Options *MatrixOptio
     return true;
 };
 
-int ViewSplashScreen(bool ShowIP) {
+int ViewSplashScreen(bool ShowIP, std::string DisplayType) {
     RGBMatrix::Options MatrixOptions;
     MatrixOptions.chain_length = 6;
+	if (DisplayType == "1x1") {
+        MatrixOptions.chain_length = 1;
+        ShowIP = false;
+    };
     MatrixOptions.rows = 16; 
     MatrixOptions.cols = 32; 
     MatrixOptions.multiplexing=4;
@@ -129,9 +133,8 @@ int ViewSplashScreen(bool ShowIP) {
         delete Matrix;
         return -EXIT_FAILURE;
     };
-
-    if (ShowIP) {
-	std::cout << "ShowIP=true\n";
+	
+    if (ShowIP == true) {
         std::string IpAddress = GetIpAddress();
         if (!IpAddress.empty()) {
             DrawIPAddress(Matrix, &MatrixOptions, IpAddress, OffscreenCanvas);
@@ -149,14 +152,19 @@ int ViewSplashScreen(bool ShowIP) {
 
 int main(int argc, char *argv[]){
     bool ShowIP = false;
-    for (int Idx = 1; Idx < argc; ++Idx) {
-        if (strcmp(argv[Idx], "-a") == 0) {
-            ShowIP = true;
-        };
-    };	
+	std::string DisplayType = "2x3";
+	
     FontsPath = argv[1];
     if (FontsPath.back() != '/') {
         FontsPath += "/";
     };
-    ViewSplashScreen(ShowIP);
+    for (int Idx = 1; Idx < argc; ++Idx) {
+        if (strcmp(argv[Idx], "-a") == 0) {
+			ShowIP = true;
+        } else if (strstr(argv[Idx], "1x1") == argv[Idx]) {
+			DisplayType = argv[Idx];
+        };
+    };
+	
+    ViewSplashScreen(ShowIP,DisplayType);
 };

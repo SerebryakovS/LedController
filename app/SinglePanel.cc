@@ -38,14 +38,17 @@ std::string ReadFromPipe(int PipeFd) {
     return Result;
 };
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {	
     RGBMatrix::Options MatrixOptions;
     MatrixOptions.chain_length = 1;
     MatrixOptions.rows = 16;
     MatrixOptions.cols = 32;
     MatrixOptions.multiplexing=4;
     MatrixOptions.parallel = 1;
-    MatrixOptions.show_refresh_rate = true;
+    MatrixOptions.pwm_bits = 11;			
+	MatrixOptions.show_refresh_rate = true;
+	MatrixOptions.pwm_lsb_nanoseconds = 200;
+	MatrixOptions.pwm_dither_bits = 2;
     rgb_matrix::RuntimeOptions RuntimeOpt;
 
     Color BackgroundColor(0,0,0);
@@ -75,8 +78,8 @@ int main(int argc, char *argv[]) {
     FrameCanvas *OffscreenCanvas = Canvas->CreateFrameCanvas();
 
     std::string LineText1 = "0";
-    Color Color1(255, 0, 0);
-    Color Color2(255, 0, 0);
+    Color Color1(255, 255, 255);
+    Color Color2(255, 255, 255);
 
     int XOffset = 0;//1;
 
@@ -85,12 +88,10 @@ int main(int argc, char *argv[]) {
         //std::string NewLineText1 = ReadFromPipe(PipeFd1);
         //if (!NewLineText1.empty()) LineText1 = NewLineText1;
 
-//        LineText1 = "↘↙◪◩";
-//        rgb_matrix::DrawText(OffscreenCanvas, Font, XOffset, 1 + Font.baseline(), 
-//                            Color1, NULL, LineText1.c_str(), LetterSpacing);
-        LineText1 = "(┘)";
-        rgb_matrix::DrawText(OffscreenCanvas, Font, XOffset, 0/*9*/ + Font.baseline(), 
-                            Color2, NULL, LineText1.c_str(), LetterSpacing);
+        LineText1 = "HELLO";
+        rgb_matrix::DrawText(OffscreenCanvas, Font, XOffset, 1 + Font.baseline(), 
+							 Color1, NULL, LineText1.c_str(), LetterSpacing);
+
         OffscreenCanvas = Canvas->SwapOnVSync(OffscreenCanvas);
         usleep(100 * 1000); 
     };

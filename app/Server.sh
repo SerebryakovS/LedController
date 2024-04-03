@@ -7,6 +7,7 @@ LOGO_PATH="$(dirname "$0")/logo.png"
 COMMANDS_PIPE="/tmp/LedCommandsPipe"
 COMMANDS_RETRIES=3
 USED_TEXTS="/tmp/LedTexts"
+DISPLAY_TYPE="1x1"
 
 RunHTTPServer() {
     socat TCP-LISTEN:$REST_PORT,fork,reuseaddr SYSTEM:"$SCRIPT_PATH APIRequestsHandler"
@@ -28,7 +29,7 @@ KillStart(){
         pkill $1 
     fi;
     if ! pgrep -x "$2" >/dev/null; then
-        "$(dirname "$SCRIPT_PATH")/$2" $FONTS_PATH $3 &
+        "$(dirname "$SCRIPT_PATH")/$2" $FONTS_PATH $3 $DISPLAY_TYPE &
         sleep 0.5;
     fi;
 };
@@ -184,7 +185,7 @@ APIRequestsHandler() {
 
 Main(){
 	sleep 10;
-    eval "$(dirname "$SCRIPT_PATH")/Splasher" $FONTS_PATH -a &
+    eval "$(dirname "$SCRIPT_PATH")/Splasher" $FONTS_PATH -a $DISPLAY_TYPE &
 	RunHTTPServer 
 };
 
