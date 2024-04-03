@@ -6,9 +6,12 @@ A library to control commonly available 64x64, 32x32 or 16x32 RGB LED panels.
 
 Supports ONE CHAIN with many panels each.
 
-app/ requires cJSON library to be installed on target system:
-https://github.com/DaveGamble/cJSON
+app/ requires cJSON library to be installed on target system: https://github.com/DaveGamble/cJSON
 
+you also need to install socat for web server operation:
+```
+sudo apt-get install socat
+```
 don't forget to configure system timezone(if needed):
 ```
 sudo timedatectl set-timezone Asia/Almaty
