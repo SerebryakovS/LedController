@@ -149,13 +149,14 @@ gpio_bits_t GPIO::InitOutputs(gpio_bits_t outputs,
    gpio_init(&hub75_gpio[ 4], "PG08"); // 16 |   B
    gpio_init(&hub75_gpio[ 5], "PC01"); // 21 |   C
    gpio_init(&hub75_gpio[ 6], "PG09"); // 18 |   D
-   gpio_init(&hub75_gpio[ 7], "PG11"); //  7 |  R1
-   gpio_init(&hub75_gpio[ 8], "PG07"); // 10 |  G1
-   gpio_init(&hub75_gpio[ 9], "PA00"); // 11 |  B1 
-   gpio_init(&hub75_gpio[10], "PA02"); // 13 |  R2
-   gpio_init(&hub75_gpio[11], "PA06"); // 12 |  G2
-   gpio_init(&hub75_gpio[12], "PA03"); // 15 |  B2
-   gpio_init(&hub75_gpio[13], "PC03"); // 24
+   gpio_init(&hub75_gpio[ 7], "PC03"); // 24 |   E
+   gpio_init(&hub75_gpio[ 8], "PG11"); //  7 |  R1
+   gpio_init(&hub75_gpio[ 9], "PG07"); // 10 |  G1
+   gpio_init(&hub75_gpio[10], "PA00"); // 11 |  B1 
+   gpio_init(&hub75_gpio[11], "PA02"); // 13 |  R2
+   gpio_init(&hub75_gpio[12], "PA06"); // 12 |  G2
+   gpio_init(&hub75_gpio[13], "PA03"); // 15 |  B2
+
 
 	for ( uint32_t i = 0; i < 14; i++ ) {
 		hub75_bank.gpio[i] = &hub75_gpio[i];

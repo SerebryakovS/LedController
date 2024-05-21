@@ -16,13 +16,14 @@ struct HardwareMapping matrix_hardware_mappings[] = {
     .b             = GPIO_BIT( 4),
     .c             = GPIO_BIT( 5),
     .d             = GPIO_BIT( 6),
+	.e 			   = GPIO_BIT( 7),
 
-    .p0_r1         = GPIO_BIT( 7),
-    .p0_g1         = GPIO_BIT( 8),
-    .p0_b1         = GPIO_BIT( 9),
-    .p0_r2         = GPIO_BIT(10),
-    .p0_g2         = GPIO_BIT(11),
-    .p0_b2         = GPIO_BIT(12),
+    .p0_r1         = GPIO_BIT( 8),
+    .p0_g1         = GPIO_BIT( 9),
+    .p0_b1         = GPIO_BIT(10),
+    .p0_r2         = GPIO_BIT(11),
+    .p0_g2         = GPIO_BIT(12),
+    .p0_b2         = GPIO_BIT(13),
 
     /*
     .output_enable = GPIO_BIT('G',6),
@@ -44,20 +45,4 @@ struct HardwareMapping matrix_hardware_mappings[] = {
   },
 
   {0}
-};
-
-struct BitToGPIOMap gpio_mapping[] = {
-    {GPIO_BIT( 0), 'G', 6},
-    {GPIO_BIT( 1), 'C', 2},
-    {GPIO_BIT( 2), 'A', 1},
-    {GPIO_BIT( 3), 'C', 0},
-    {GPIO_BIT( 4), 'G', 8},
-    {GPIO_BIT( 5), 'C', 1},
-    {GPIO_BIT( 6), 'G', 9},
-    {GPIO_BIT( 7), 'G',11},
-    {GPIO_BIT( 8), 'G', 7},
-    {GPIO_BIT( 9), 'A', 0},
-    {GPIO_BIT(10), 'A', 2},
-    {GPIO_BIT(11), 'A', 6},
-    {GPIO_BIT(12), 'A', 3},
 };

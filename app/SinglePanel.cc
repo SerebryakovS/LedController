@@ -40,14 +40,15 @@ std::string ReadFromPipe(int PipeFd) {
 
 int main(int argc, char *argv[]) {	
     RGBMatrix::Options MatrixOptions;
-    MatrixOptions.chain_length = 1;
-    MatrixOptions.rows = 16;
-    MatrixOptions.cols = 32;
-    MatrixOptions.multiplexing=4;
-    MatrixOptions.parallel = 1;
-    MatrixOptions.pwm_bits = 11;			
+	MatrixOptions.rows = 64; 
+	MatrixOptions.cols = 64;
+	MatrixOptions.multiplexing=0;
+	MatrixOptions.parallel = 1;	
+	MatrixOptions.chain_length = 1; 
+    MatrixOptions.row_address_type = 0; // ABC-addressed panels
+    MatrixOptions.pwm_bits = 1;			
 	MatrixOptions.show_refresh_rate = true;
-	MatrixOptions.pwm_lsb_nanoseconds = 200;
+	MatrixOptions.pwm_lsb_nanoseconds = 1000;
 	MatrixOptions.pwm_dither_bits = 2;
     rgb_matrix::RuntimeOptions RuntimeOpt;
 
@@ -91,7 +92,12 @@ int main(int argc, char *argv[]) {
         LineText1 = "HELLO";
         rgb_matrix::DrawText(OffscreenCanvas, Font, XOffset, 1 + Font.baseline(), 
 							 Color1, NULL, LineText1.c_str(), LetterSpacing);
-
+        rgb_matrix::DrawText(OffscreenCanvas, Font, XOffset, 15 + Font.baseline(), 
+							 Color1, NULL, LineText1.c_str(), LetterSpacing);
+        rgb_matrix::DrawText(OffscreenCanvas, Font, XOffset, 30 + Font.baseline(), 
+							 Color1, NULL, LineText1.c_str(), LetterSpacing);
+        rgb_matrix::DrawText(OffscreenCanvas, Font, XOffset, 45 + Font.baseline(), 
+							 Color1, NULL, LineText1.c_str(), LetterSpacing);
         OffscreenCanvas = Canvas->SwapOnVSync(OffscreenCanvas);
         usleep(100 * 1000); 
     };
