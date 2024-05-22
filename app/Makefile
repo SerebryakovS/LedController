@@ -26,14 +26,16 @@ Controller: Controller.o Json.o $(RGB_LIBRARY)
 SinglePanel: SinglePanel.o $(RGB_LIBRARY)
 	$(CXX) $(CXXFLAGS) SinglePanel.o -o $@ $(LDFLAGS)
 
-
 Splasher: Splasher.o $(RGB_LIBRARY)
-	$(CXX) $(CXXFLAGS) Splasher.o -o $@ $(LDFLAGS) $(MAGICK_LDFLAGS)
+	$(CXX) $(CXXFLAGS) Splasher.o -o $@ $(LDFLAGS)
+
+ImageViewer: ImageViewer.o $(RGB_LIBRARY)
+	$(CXX) $(CXXFLAGS) ImageViewer.o -o $@ $(LDFLAGS) $(RGB_LDFLAGS) $(MAGICK_LDFLAGS)
 
 %.o : %.cc
 	$(CXX) -I$(RGB_INCDIR) $(CXXFLAGS) -c -o $@ $<
 
-Splasher.o : Splasher.cc
+ImageViewer.o : ImageViewer.cc
 	$(CXX) -I$(RGB_INCDIR) $(CXXFLAGS) $(MAGICK_CXXFLAGS) -c -o $@ $<
 
 clean:

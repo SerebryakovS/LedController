@@ -45,12 +45,10 @@ void DrawIPAddress(RGBMatrix *Matrix, RGBMatrix::Options *MatrixOptions, const s
 	if (!Font.LoadFont((FontsPath + "4x6.bdf").c_str())){
 		printf("_____[ERR]: Could not load font..\n");
 	};
-    int StartPanelNum = 5;
-    int XOffset = StartPanelNum * MatrixOptions->cols;
     int TextLength = 4 * IpAddress.length(); 
-    XOffset -= TextLength / 2;
-    Color _Color(255, 255, 0);
-	rgb_matrix::DrawText(OffscreenCanvas, Font, XOffset, MatrixOptions->cols/2 - Font.baseline(), _Color, nullptr, IpAddress.c_str(), 0);
+	int XOffset = Matrix->width()/2 - TextLength / 2;
+    Color _Color(0, 255, 0);
+	rgb_matrix::DrawText(OffscreenCanvas, Font, XOffset+1, MatrixOptions->rows * 4/5 , _Color, nullptr, IpAddress.c_str(), 0);
 };
 
 volatile bool InterruptReceived = false;
@@ -66,34 +64,32 @@ bool DisplayLogoPatternCenter(RGBMatrix *Matrix, RGBMatrix::Options *MatrixOptio
     OffscreenCanvas->Clear();
     RGB ColorOne = {21, 127, 255}; 
     RGB ColorTwo = {0,  255, 145}; 
-    const int LogoPattern[16][32] = {
-        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-        {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
-        {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1},
-        {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1},
-        {1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1},
-        {1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1},
-        {1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1},
-        {1,1,1,2,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1},
-        {1,1,1,2,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1},
-        {1,1,1,2,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1},
-        {1,1,1,1,1,1,1,1,1,1,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-        {1,1,1,1,1,1,1,1,1,1,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-        {1,1,1,1,1,1,1,1,1,1,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-        {1,1,1,1,1,1,1,1,1,1,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-        {1,1,1,1,1,1,1,1,1,1,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-        {1,1,1,1,1,1,1,1,1,1,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+    const int LogoPattern[16][64] = {
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
     };
 
-    int XOffset = (Matrix->width() - MatrixOptions->cols) / 2;
-    int YOffset = (Matrix->height() - MatrixOptions->rows) / 2;
-
-    for (int Y = 0; Y < MatrixOptions->rows; ++Y) {
+    int YOffset = Matrix->height() / 2 - 8;
+    for (int Y = 0; Y < MatrixOptions->rows-48; ++Y) {
         for (int X = 0; X < MatrixOptions->cols; ++X) {
             if (LogoPattern[Y][X] == 0) {
-                OffscreenCanvas->SetPixel(X + XOffset, Y + YOffset, ColorOne.Red, ColorOne.Green, ColorOne.Blue);
+                OffscreenCanvas->SetPixel(X, Y + YOffset, ColorOne.Red, ColorOne.Green, ColorOne.Blue);
             } else if (LogoPattern[Y][X] == 2) {
-                OffscreenCanvas->SetPixel(X + XOffset, Y + YOffset, ColorTwo.Red, ColorTwo.Green, ColorTwo.Blue);
+                OffscreenCanvas->SetPixel(X, Y + YOffset, ColorTwo.Red, ColorTwo.Green, ColorTwo.Blue);
             } else {
                 OffscreenCanvas->SetPixel(X, Y, 0, 0, 0);
             };
@@ -102,22 +98,22 @@ bool DisplayLogoPatternCenter(RGBMatrix *Matrix, RGBMatrix::Options *MatrixOptio
     return true;
 };
 
-int ViewSplashScreen(bool ShowIP, std::string DisplayType) {
+int ViewSplashScreen(bool ShowIP) {
     RGBMatrix::Options MatrixOptions;
-    MatrixOptions.chain_length = 6;
-	if (DisplayType == "1x1") {
-        MatrixOptions.chain_length = 1;
-        ShowIP = false;
-    };
-    MatrixOptions.rows = 16; 
-    MatrixOptions.cols = 32; 
-    MatrixOptions.multiplexing=4;
-    MatrixOptions.parallel = 1;
-    MatrixOptions.show_refresh_rate = true;
-    MatrixOptions.pwm_bits = 3; 
-    MatrixOptions.limit_refresh_rate_hz = 100;
+	MatrixOptions.rows = 64; 
+	MatrixOptions.cols = 64;
+	MatrixOptions.multiplexing=0;
+	MatrixOptions.parallel = 1;	
+	MatrixOptions.chain_length = 1; 
+    MatrixOptions.row_address_type = 0; // ABC-addressed panels
+    MatrixOptions.pwm_bits = 1;			
+	MatrixOptions.show_refresh_rate = true;
+	MatrixOptions.pwm_lsb_nanoseconds = 1000;
+	MatrixOptions.pwm_dither_bits = 2;
+	MatrixOptions.led_rgb_sequence = "BRG";
+	
     rgb_matrix::RuntimeOptions RuntimeOpt;
-    RGBMatrix *Matrix = RGBMatrix::CreateFromOptions(MatrixOptions, RuntimeOpt);
+	RGBMatrix *Matrix = RGBMatrix::CreateFromOptions(MatrixOptions, RuntimeOpt);
     if (Matrix == NULL) {
         std::cerr << "Could not create matrix object.\n";
         return 1;
@@ -151,9 +147,7 @@ int ViewSplashScreen(bool ShowIP, std::string DisplayType) {
 };
 
 int main(int argc, char *argv[]){
-    bool ShowIP = false;
-	std::string DisplayType = "2x3";
-	
+    bool ShowIP = false;	
     FontsPath = argv[1];
     if (FontsPath.back() != '/') {
         FontsPath += "/";
@@ -161,10 +155,8 @@ int main(int argc, char *argv[]){
     for (int Idx = 1; Idx < argc; ++Idx) {
         if (strcmp(argv[Idx], "-a") == 0) {
 			ShowIP = true;
-        } else if (strstr(argv[Idx], "1x1") == argv[Idx]) {
-			DisplayType = argv[Idx];
         };
     };
 	
-    ViewSplashScreen(ShowIP,DisplayType);
+    ViewSplashScreen(ShowIP);
 };

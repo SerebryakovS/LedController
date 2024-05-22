@@ -2,12 +2,12 @@
 
 SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
 REST_PORT=13222
-FONTS_PATH="$(dirname "$0")"/../fonts/
-LOGO_PATH="$(dirname "$0")/logo.png"
+cd "$(dirname "$0")";
+FONTS_PATH=../fonts/
+LOGO_PATH="./logo.png"
 COMMANDS_PIPE="/tmp/LedCommandsPipe"
 COMMANDS_RETRIES=3
 USED_TEXTS="/tmp/LedTexts"
-DISPLAY_TYPE="1x1"
 
 RunHTTPServer() {
     socat TCP-LISTEN:$REST_PORT,fork,reuseaddr SYSTEM:"$SCRIPT_PATH APIRequestsHandler"
@@ -29,7 +29,7 @@ KillStart(){
         pkill $1 
     fi;
     if ! pgrep -x "$2" >/dev/null; then
-        "$(dirname "$SCRIPT_PATH")/$2" $FONTS_PATH $3 $DISPLAY_TYPE &
+        "$(dirname "$SCRIPT_PATH")/$2" $FONTS_PATH $3 &
         sleep 0.5;
     fi;
 };
@@ -38,11 +38,11 @@ ProcessLine() {
     local LineNum="$1"; local LineText="$2"; local LineColor="$3";
 	local Retries=COMMANDS_RETRIES;
     local Success=false;
-    if [[ $LineNum -ge 1 && $LineNum -le 3 ]]; then
+    if [[ $LineNum -ge 1 && $LineNum -le 4 ]]; then
         while [[ $Retries -gt 0 && $Success == false ]]; do
             Command="{\"cmd\":\"set_line_text\",\"line_num\":$LineNum,\"text\":$LineText,\"color\":$LineColor}"
             echo "$Command" > "$COMMANDS_PIPE"
-            sleep 2;
+            sleep 1;
 			if VerifyLineText "$LineNum" "$LineText"; then
                 Success=true;
                 echo "success";
@@ -103,12 +103,12 @@ APIRequestsHandler() {
             KillStart Splasher Controller
             LineNum=$(echo "$Body" | jq ".line_num")
             LineText=$(echo "$Body" | jq ".text")
-            LineColor=$(echo "$Body" | jq ".color")
+            LineColor=$(echo "$Body" | jq ".color")			
 			ProcessLineResult=$(ProcessLine "$LineNum" "$LineText" "$LineColor")
 			if [[ "$ProcessLineResult" == "success" ]]; then
 				echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"success\"}"
 			else
-				echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"error\": \"$ProcessLineResult\"}"
+				echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"error\": \"$Body\"}"
 			fi
 			;;
 		"/set_all_lines")
@@ -170,7 +170,6 @@ APIRequestsHandler() {
 			KillProcess Splasher;
 			ShowIP=$(echo "$Body" | jq ".show_ip")
             if [[ "$ShowIP" == "true" ]];then
-				echo "HERE"
 				KillStart Controller Splasher -a
 			else
 				KillStart Controller Splasher
@@ -184,8 +183,8 @@ APIRequestsHandler() {
 };
 
 Main(){
-	sleep 10;
-    eval "$(dirname "$SCRIPT_PATH")/Splasher" $FONTS_PATH -a $DISPLAY_TYPE &
+	sleep 5;
+    eval "$(dirname "$SCRIPT_PATH")/Splasher" $FONTS_PATH -a &
 	RunHTTPServer 
 };
 

@@ -76,21 +76,20 @@ int main(int argc, char *argv[]) {
     if (FontsPath.back() != '/') {
         FontsPath += "/";
     };
-	std::string DisplayType = "2x3";
-	if (argc > 2) {
-		DisplayType = argv[2];
-	};
 	
 	RGBMatrix::Options MatrixOptions;
-	MatrixOptions.rows = 16; 
-	MatrixOptions.cols = 32; 
-	MatrixOptions.multiplexing=4;
-	MatrixOptions.parallel = 1;
-	//MatrixOptions.show_refresh_rate = true;
 	
-	//MatrixOptions.pwm_bits = 11;
-	//MatrixOptions.pwm_dither_bits = 2;
-	//MatrixOptions.pwm_lsb_nanoseconds = 200;
+	MatrixOptions.rows = 64; 
+	MatrixOptions.cols = 64;
+	MatrixOptions.multiplexing=0;
+	MatrixOptions.parallel = 1;	
+	MatrixOptions.chain_length = 1; 
+    MatrixOptions.row_address_type = 0; // ABC-addressed panels
+    MatrixOptions.pwm_bits = 1;			
+	MatrixOptions.show_refresh_rate = true;
+	MatrixOptions.pwm_lsb_nanoseconds = 1400;
+	MatrixOptions.pwm_dither_bits = 2;
+	MatrixOptions.led_rgb_sequence = "BRG";
 	
 	rgb_matrix::RuntimeOptions RuntimeOpt;
 	
@@ -101,13 +100,6 @@ int main(int argc, char *argv[]) {
 	rgb_matrix::Font BFont; BFont.LoadFont((FontsPath + "7x13.bdf").c_str()); //  9 symbols
 	rgb_matrix::Font CFont; CFont.LoadFont((FontsPath + "6x13.bdf").c_str()); // 10 symbols
 	rgb_matrix::Font *SetFont;
-	
-	if (DisplayType == "1x1") {
-		MatrixOptions.chain_length = 1;
-		SetFont = &CFont;
-	} else if (DisplayType == "2x3"){
-		MatrixOptions.chain_length = 6;
-	};
 	
 	RGBMatrix *Canvas = RGBMatrix::CreateFromOptions(MatrixOptions, RuntimeOpt);
 	if (Canvas == NULL){
@@ -120,22 +112,24 @@ int main(int argc, char *argv[]) {
 
 	FrameCanvas *OffscreenCanvas = Canvas->CreateFrameCanvas();
 
-    std::vector<std::string> LineTexts = {"0", "0", "0"};
+    std::vector<std::string> LineTexts = {"0", "0", "0", "0"};
     std::vector<Color> Colors = {
         Color(255, 255, 255),
         Color(255, 255, 255),
-        Color(255, 255, 255)
+        Color(255, 255, 255),
+		Color(255, 255, 255)
     };
-	std::vector<BlinkState> BlinkStates(3);
-	int YPosition = 2;
+	std::vector<BlinkState> BlinkStates(4);
+	int XOffset = 2;
 	while (!InterruptReceived) {
 		OffscreenCanvas->Fill(BackgroundColor.r, BackgroundColor.g, BackgroundColor.b);
 		std::string NewCommandPacket = ReadFromPipe(IncomingCommandsPipe);
 		if (!NewCommandPacket.empty()) {
 			std::string CommandName = GetCommandName(NewCommandPacket);
 			if (CommandName == "set_line_text") {
+				printf("NewCommandPacket:%s\n",NewCommandPacket.c_str());
 				SetLineTextRequest Request;
-				if (ParseSetLineTextRequest(NewCommandPacket.c_str(), &Request) && Request.LineNumber >= 1 && Request.LineNumber <= 3) {
+				if (ParseSetLineTextRequest(NewCommandPacket.c_str(), &Request) && Request.LineNumber >= 1 && Request.LineNumber <= 4) {
 					int LineIndex = Request.LineNumber - 1; 
                     LineTexts[LineIndex] = std::string(Request.LineText);
                     Colors[LineIndex] = Request.LineColor; 
@@ -147,7 +141,7 @@ int main(int argc, char *argv[]) {
 				};
 			} else if (CommandName == "set_line_time") {
 				SetLineTimeRequest Request;
-				if (ParseSetLineTimeRequest(NewCommandPacket.c_str(), &Request) && Request.LineNumber >= 1 && Request.LineNumber <= 3) {
+				if (ParseSetLineTimeRequest(NewCommandPacket.c_str(), &Request) && Request.LineNumber >= 1 && Request.LineNumber <= 4) {
 					int LineIndex = Request.LineNumber -1;
 					if (TimeDisplayLine > 0){
 						LineTexts[TimeDisplayLine-1] = "0";
@@ -155,7 +149,6 @@ int main(int argc, char *argv[]) {
 					if (TimeDisplayLine == Request.LineNumber) {
 						TimeDisplayLine = -1;
 					} else {
-						
 						TimeDisplayLine = Request.LineNumber;
 						Colors[LineIndex] = Color(255, 255, 255);
 					};
@@ -163,7 +156,7 @@ int main(int argc, char *argv[]) {
 				};
 			} else if (CommandName == "set_line_blink") {
 				SetLineBlinkRequest Request;
-				if (ParseSetLineBlinkRequest(NewCommandPacket.c_str(), &Request) && Request.LineNumber >= 1 && Request.LineNumber <= 3) {
+				if (ParseSetLineBlinkRequest(NewCommandPacket.c_str(), &Request) && Request.LineNumber >= 1 && Request.LineNumber <= 4) {
 					int LineIndex = Request.LineNumber - 1;
 					BlinkStates[LineIndex].IsBlinking = true;
 					BlinkStates[LineIndex].BlinkFrequency = Request.LineBlinkFrequency;
@@ -187,20 +180,17 @@ int main(int argc, char *argv[]) {
 					};
 				};
 			};
-			int XOffset = 1 + 64 * Idx;
+			int YPosition = 2+15*Idx;
 			size_t TextLength = LineTexts[Idx].length();
-			if (DisplayType != "1x1"){
-				if (TextLength <= 8){
-					SetFont = &AFont;
-				} else if (TextLength == 9){
-					SetFont = &BFont;
-				} else if (TextLength  > 9){
-					SetFont = &CFont;
-				};
-			};
+			//if (TextLength <= 8){
+			//	SetFont = &AFont;
+			//} else if (TextLength == 9){
+			//	SetFont = &BFont;
+			//} else if (TextLength  > 9){
+				SetFont = &CFont;
+			//};
 			DrawTextSegment(OffscreenCanvas, *SetFont, XOffset, LineTexts[Idx], Colors[Idx], LetterSpacing, YPosition);
 		};
-		
 		OffscreenCanvas = Canvas->SwapOnVSync(OffscreenCanvas);
 		usleep(100 * 1000); 
 	};

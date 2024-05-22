@@ -8,9 +8,13 @@ Supports ONE CHAIN with many panels each.
 
 app/ requires cJSON library to be installed on target system: https://github.com/DaveGamble/cJSON
 
-you also need to install socat for web server operation:
+you also need to install socat and jq utils for web server operation:
 ```
-sudo apt-get install socat
+sudo apt-get install socat jq
+```
+and also some image magic libs for image processing:
+```
+sudo apt-get install libmagick++-dev libgraphicsmagick++-dev libwebp-dev
 ```
 don't forget to configure system timezone(if needed):
 ```
