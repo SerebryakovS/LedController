@@ -117,6 +117,7 @@
         <div class="tab">
             <button class="tablinks" onclick="openTab(event, 'SetText')" id="defaultOpen">Text</button>
             <button class="tablinks" onclick="openTab(event, 'SetTime')">Clock</button>
+			<button class="tablinks" onclick="openTab(event, 'SetScroll')">Scroll</button>
             <button class="tablinks" onclick="openTab(event, 'SetBlink')">Blink</button>
             <button class="tablinks" onclick="openTab(event, 'SplashBoot')">Splash</button>
         </div>
@@ -132,7 +133,7 @@
                     <td><input type="text" id="text" name="text"></td>
                 </tr>
                 <tr>
-				<td>Color:</td>
+					<td>Color:</td>
 					<td>
 						<input type="hidden" id="selectedColor" value="#FFFFFF">
 						<div class="color-picker-wrapper">
@@ -159,7 +160,20 @@
             </table>
             <button type="button" onclick="sendData('/set_line_time')">Send Request</button>
         </div>
-    
+		 <div id="SetScroll" class="tabcontent">
+			<h2>Scroll text on panel line</h2>
+			<table>
+				<tr>
+					<td>Line Number:</td>
+					<td><input type="number" id="scroll_line_num" name="line_num" max="4"></td>
+				</tr>
+				<tr>
+					<td>Scroll Speed (ms):</td>
+					<td><input type="number" id="scroll_speed" name="scroll_speed"></td>
+				</tr>
+			</table>
+			<button type="button" onclick="sendData('/set_line_scroll')">Send Request</button>
+		</div>
         <div id="SetBlink" class="tabcontent">
             <h2>Set panel line blinking</h2>
             <table>
@@ -236,6 +250,12 @@
                         line_num: parseInt(document.getElementById("time_line_num").value, 10)
                     };
                     break;
+				case '/set_line_scroll':
+					data = {
+						line_num: parseInt(document.getElementById("scroll_line_num").value, 10),
+						scroll_speed: parseInt(document.getElementById("scroll_speed").value, 10)
+					};
+					break;
                 case '/set_line_blink':
                     data = {
                         line_num: parseInt(document.getElementById("blink_line_num").value, 10),

@@ -166,6 +166,19 @@ APIRequestsHandler() {
 				echo "$Command" > "$COMMANDS_PIPE"
 				echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"success\"}"
 				;;
+		"/set_line_scroll")
+			KillStart Splasher Controller
+			LineNum=$(echo "$Body" | jq ".line_num")
+			ScrollSpeed=$(echo "$Body" | jq ".scroll_speed")
+			if [[ ! $LineNum =~ ^[0-9]+$ || ! $ScrollSpeed =~ ^[0-9]+$ ]]; then
+				echo -ne "HTTP/1.1 400 Bad Request\r\nContent-Type: application/json\r\n\r\n{\"error\": \"Invalid input data\"}"
+			else
+				# Execute the command to scroll text on the specified line with the given speed
+				Command="{\"cmd\":\"set_line_scroll\",\"line_num\":$LineNum,\"scroll_speed\":$ScrollSpeed}"
+				echo "$Command" > "$COMMANDS_PIPE"
+				echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"success\"}"
+			fi
+			;;
         "/set_splasher")
 			KillProcess Splasher;
 			ShowIP=$(echo "$Body" | jq ".show_ip")

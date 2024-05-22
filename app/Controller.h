@@ -30,7 +30,13 @@ typedef struct {
 	float LineBlinkTimeout; 
 } SetLineBlinkRequest;
 
+typedef struct {
+    int LineNumber;
+    int ScrollSpeed; // in milliseconds
+} SetLineScrollRequest;
+
 std::string GetCommandName(std::string RawJsonString);
 int ParseSetLineTextRequest(const char *JsonString, SetLineTextRequest *Request);
 int ParseSetLineTimeRequest(const char *JsonString, SetLineTimeRequest *Request);
 int ParseSetLineBlinkRequest(const char *JsonString, SetLineBlinkRequest* Request);
+int ParseSetLineScrollRequest(const char *JsonString, SetLineScrollRequest* Request);

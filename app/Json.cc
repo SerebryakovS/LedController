@@ -80,3 +80,22 @@ int ParseSetLineBlinkRequest(const char* JsonString, SetLineBlinkRequest* Reques
     cJSON_Delete(JsonToParse);
     return true;
 };
+
+int ParseSetLineScrollRequest(const char* JsonString, SetLineScrollRequest* Request) {
+    cJSON *JsonToParse = cJSON_Parse(JsonString);
+    if (JsonToParse == NULL) {
+        return false;
+    };
+    const cJSON *LineNumber = cJSON_GetObjectItemCaseSensitive(JsonToParse, "line_num");
+    const cJSON *ScrollSpeed = cJSON_GetObjectItemCaseSensitive(JsonToParse, "scroll_speed");
+
+    if (!cJSON_IsNumber(LineNumber) || !cJSON_IsNumber(ScrollSpeed)) {
+        cJSON_Delete(JsonToParse);
+        return false; 
+    };
+    Request->LineNumber = LineNumber->valueint;
+    Request->ScrollSpeed = ScrollSpeed->valueint;
+
+    cJSON_Delete(JsonToParse);
+    return true;
+}
