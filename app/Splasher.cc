@@ -7,6 +7,11 @@
 #include <arpa/inet.h>
 #include <ifaddrs.h>
 #include "graphics.h"
+#include <cmath>
+
+#ifndef M_PI
+	#define M_PI 3.14159265358979323846
+#endif
 
 std::string FontsPath;
 
@@ -84,33 +89,52 @@ bool DisplayLogoPatternCenter(RGBMatrix *Matrix, RGBMatrix::Options *MatrixOptio
     };
 
     int YOffset = Matrix->height() / 2 - 8;
-    for (int Y = 0; Y < MatrixOptions->rows-48; ++Y) {
-        for (int X = 0; X < MatrixOptions->cols; ++X) {
+	int XOffset = 0;
+	if (MatrixOptions->cols > 64){
+		XOffset = (MatrixOptions->cols-64)/2;
+	};
+    for (int Y = 0; Y < 16; ++Y) {
+        for (int X = 0; X < 64; ++X) {
             if (LogoPattern[Y][X] == 0) {
-                OffscreenCanvas->SetPixel(X, Y + YOffset, ColorOne.Red, ColorOne.Green, ColorOne.Blue);
+                OffscreenCanvas->SetPixel(X + XOffset, Y + YOffset, ColorOne.Red, ColorOne.Green, ColorOne.Blue);
             } else if (LogoPattern[Y][X] == 2) {
-                OffscreenCanvas->SetPixel(X, Y + YOffset, ColorTwo.Red, ColorTwo.Green, ColorTwo.Blue);
+                OffscreenCanvas->SetPixel(X + XOffset, Y + YOffset, ColorTwo.Red, ColorTwo.Green, ColorTwo.Blue);
             } else {
-                OffscreenCanvas->SetPixel(X, Y, 0, 0, 0);
+                OffscreenCanvas->SetPixel(X + XOffset, Y + YOffset, 0, 0, 0);
             };
         };
     };
     return true;
+
 };
 
-int ViewSplashScreen(bool ShowIP) {
+void DrawCircleCenter(RGBMatrix *Matrix, FrameCanvas *OffscreenCanvas, int radius, unsigned char Red, unsigned char Green, unsigned char Blue) {
+    int XCenter = Matrix->width() / 2;
+    int YCenter = Matrix->height() / 2;
+
+    for (int y = -radius; y <= radius; y++) {
+        for (int x = -radius; x <= radius; x++) {
+            if ((x * x + y * y) <= (radius * radius + radius)) {
+                OffscreenCanvas->SetPixel(XCenter + x, YCenter + y, Red, Green, Blue);
+            }
+        }
+    }
+}
+
+int ViewSplashScreen(bool ShowIP, bool ShowLogo, bool ShowSemaphore, unsigned char Red, unsigned char Green, unsigned char Blue) {
     RGBMatrix::Options MatrixOptions;
 	MatrixOptions.rows = 64; 
-	MatrixOptions.cols = 64;
-	MatrixOptions.multiplexing=0;
+	MatrixOptions.cols = 128;
+	MatrixOptions.multiplexing = 0;
 	MatrixOptions.parallel = 1;	
 	MatrixOptions.chain_length = 1; 
-    MatrixOptions.row_address_type = 0; // ABC-addressed panels
+    MatrixOptions.row_address_type = 0;
     MatrixOptions.pwm_bits = 1;			
 	MatrixOptions.show_refresh_rate = true;
-	MatrixOptions.pwm_lsb_nanoseconds = 1000;
+	MatrixOptions.pwm_lsb_nanoseconds = 800;
 	MatrixOptions.pwm_dither_bits = 2;
-	MatrixOptions.led_rgb_sequence = "BRG";
+	
+
 	
     rgb_matrix::RuntimeOptions RuntimeOpt;
 	RGBMatrix *Matrix = RGBMatrix::CreateFromOptions(MatrixOptions, RuntimeOpt);
@@ -121,23 +145,26 @@ int ViewSplashScreen(bool ShowIP) {
     signal(SIGTERM, InterruptHandler);
     signal(SIGINT, InterruptHandler);
 
-
     FrameCanvas *OffscreenCanvas = Matrix->CreateFrameCanvas();
-	
-    if(!DisplayLogoPatternCenter(Matrix, &MatrixOptions, OffscreenCanvas)){
-        std::cerr << "Displaying image failed.\n";
-        delete Matrix;
-        return -EXIT_FAILURE;
+		
+    if (ShowLogo) {
+        if (!DisplayLogoPatternCenter(Matrix, &MatrixOptions, OffscreenCanvas)) {
+            std::cerr << "Displaying image failed.\n";
+            delete Matrix;
+            return -EXIT_FAILURE;
+        };
     };
-	
-    if (ShowIP == true) {
+    if (ShowIP) {
         std::string IpAddress = GetIpAddress();
         if (!IpAddress.empty()) {
             DrawIPAddress(Matrix, &MatrixOptions, IpAddress, OffscreenCanvas);
         };
     };
+    if (ShowSemaphore) {
+        DrawCircleCenter(Matrix, OffscreenCanvas, 20, Red, Green, Blue);
+    };
+	
     Matrix->SwapOnVSync(OffscreenCanvas);
-
     while (!InterruptReceived) {
         sleep(1);
     };
@@ -146,17 +173,39 @@ int ViewSplashScreen(bool ShowIP) {
     return 0;
 };
 
-int main(int argc, char *argv[]){
-    bool ShowIP = false;	
+int main(int argc, char *argv[]) {
+    bool ShowIP = false;
+    bool ShowLogo = false;
+    bool ShowSemaphore = false;
+    unsigned char Red = 0, Green = 0, Blue = 0;
+    
     FontsPath = argv[1];
     if (FontsPath.back() != '/') {
         FontsPath += "/";
-    };
-    for (int Idx = 1; Idx < argc; ++Idx) {
+    }
+
+    for (int Idx = 2; Idx < argc; ++Idx) {
         if (strcmp(argv[Idx], "-a") == 0) {
-			ShowIP = true;
-        };
-    };
-	
-    ViewSplashScreen(ShowIP);
-};
+            ShowIP = true;
+        }
+        if (strcmp(argv[Idx], "-l") == 0) {
+            ShowLogo = true;
+        }
+        if (strcmp(argv[Idx], "-s") == 0) {
+            ShowSemaphore = true;
+            if (Idx + 1 < argc) {
+                std::string ColorStr = argv[++Idx];
+                if (sscanf(ColorStr.c_str(), "%hhu,%hhu,%hhu", &Red, &Green, &Blue) != 3) {
+                    std::cerr << "Invalid color format. Use R,G,B format.\n";
+                    return 1;
+                }
+            } else {
+                std::cerr << "Missing color for semaphore mode.\n";
+                return 1;
+            }
+        }
+    }
+
+    ViewSplashScreen(ShowIP, ShowLogo, ShowSemaphore, Red, Green, Blue);
+    return 0;
+}

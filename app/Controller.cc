@@ -83,20 +83,19 @@ int main(int argc, char *argv[]) {
     std::string FontsPath = argv[1];
     if (FontsPath.back() != '/') {
         FontsPath += "/";
-    }
-	
+    };
     RGBMatrix::Options MatrixOptions;
     MatrixOptions.rows = 64; 
-    MatrixOptions.cols = 64;
+    MatrixOptions.cols = 128;
     MatrixOptions.multiplexing = 0;
     MatrixOptions.parallel = 1;	
     MatrixOptions.chain_length = 1; 
     MatrixOptions.row_address_type = 0;
     MatrixOptions.pwm_bits = 1;
     MatrixOptions.show_refresh_rate = true;
-    MatrixOptions.pwm_lsb_nanoseconds = 1400;
+    MatrixOptions.pwm_lsb_nanoseconds = 700;
     MatrixOptions.pwm_dither_bits = 2;
-    MatrixOptions.led_rgb_sequence = "BRG";
+    //MatrixOptions.led_rgb_sequence = "BRG";
 	
     rgb_matrix::RuntimeOptions RuntimeOpt;
 	
@@ -136,7 +135,7 @@ int main(int argc, char *argv[]) {
         if (!NewCommandPacket.empty()) {
             std::string CommandName = GetCommandName(NewCommandPacket);
             if (CommandName == "set_line_text") {
-                printf("NewCommandPacket:%s\n", NewCommandPacket.c_str());
+                printf("\rNewCommandPacket:%s\n", NewCommandPacket.c_str());
                 SetLineTextRequest Request;
                 if (ParseSetLineTextRequest(NewCommandPacket.c_str(), &Request) && Request.LineNumber >= 1 && Request.LineNumber <= 4) {
                     int LineIndex = Request.LineNumber - 1;
@@ -208,12 +207,12 @@ int main(int argc, char *argv[]) {
                 auto ElapsedTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(Now - ScrollStates[Idx].LastScrollTime).count();
                 if (ElapsedTimeMs > ScrollStates[Idx].ScrollSpeed) {
                     ScrollStates[Idx].CurrentOffset--;
-                    if (ScrollStates[Idx].CurrentOffset <= -64) {
+                    if (ScrollStates[Idx].CurrentOffset <= -128) {
                         ScrollStates[Idx].CurrentOffset = ScrollStates[Idx].Text.length() * 6;
                     }
                     ScrollStates[Idx].LastScrollTime = Now;
                 }
-                for (int x = ScrollStates[Idx].CurrentOffset; x < 64; x += ScrollStates[Idx].Text.length() * 6 + 64) {
+                for (int x = ScrollStates[Idx].CurrentOffset; x < 128; x += ScrollStates[Idx].Text.length() * 6 + 128) {
                     DrawTextSegment(OffscreenCanvas, *SetFont, x, LineTexts[Idx], Colors[Idx], LetterSpacing, YPosition);
                 }
             } else {
