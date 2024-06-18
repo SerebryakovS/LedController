@@ -9,6 +9,8 @@ COMMANDS_PIPE="/tmp/LedCommandsPipe"
 COMMANDS_RETRIES=3
 USED_TEXTS="/tmp/LedTexts"
 
+export PANEL_WIDTH=128
+
 RunHTTPServer() {
     socat TCP-LISTEN:$REST_PORT,fork,reuseaddr SYSTEM:"$SCRIPT_PATH APIRequestsHandler"
 };
@@ -142,7 +144,7 @@ APIRequestsHandler() {
 			echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"success\"}"
 			;;
 			"/set_line_blink")
-				KillStart Splasher Controller
+				#KillStart Splasher Controller
 				LineNum=$(echo "$Body" | jq ".line_num");
 				BlinkFreq=$(echo "$Body" | jq ".blink_freq");
 				BlinkDuration=$(echo "$Body" | jq -r ".blink_time")
@@ -179,15 +181,32 @@ APIRequestsHandler() {
 				echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"success\"}"
 			fi
 			;;
-        "/set_splasher")
+		"/set_splasher")
 			KillProcess Splasher;
 			ShowIP=$(echo "$Body" | jq ".show_ip")
-            if [[ "$ShowIP" == "true" ]];then
-				KillStart Controller Splasher -a
-			else
-				KillStart Controller Splasher
-			fi;
+			Argument="-l"  # Show logo by default
+			if [[ "$ShowIP" == "true" ]]; then
+				Argument="-l -a"
+			fi
+
+			KillStart Controller Splasher "$Argument"
+			echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"success\"}"
+			;;
+        "/set_colored_circle")
+            KillProcess Splasher
+            ColorHex=$(echo "$Body" | jq -r ".color")
+            if [[ ! $ColorHex =~ ^#[0-9A-Fa-f]{6}$ ]]; then
+                echo -ne "HTTP/1.1 400 Bad Request\r\nContent-Type: application/json\r\n\r\n{\"error\": \"Invalid color format. Use #RRGGBB.\"}"
+                return
+            fi
+            Red=$((16#${ColorHex:1:2}))
+            Green=$((16#${ColorHex:3:2}))
+            Blue=$((16#${ColorHex:5:2}))
+            KillStart Controller Splasher "-s $Red,$Green,$Blue"
             echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"success\"}"
+            ;;
+        *)
+            echo -ne "HTTP/1.1 404 Not Found\r\nContent-Type: application/json\r\n\r\n{\"status\": \"error\", \"message\": \"Endpoint not found\"}"
             ;;
         *)
             echo -ne "HTTP/1.1 404 Not Found\r\nContent-Type: application/json\r\n\r\n{\"status\": \"error\", \"message\": \"Endpoint not found\"}"
@@ -197,7 +216,7 @@ APIRequestsHandler() {
 
 Main(){
 	sleep 5;
-    eval "$(dirname "$SCRIPT_PATH")/Splasher" $FONTS_PATH -a &
+    eval "$(dirname "$SCRIPT_PATH")/Splasher" $FONTS_PATH -l -a &
 	RunHTTPServer 
 };
 

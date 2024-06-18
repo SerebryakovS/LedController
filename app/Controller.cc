@@ -2,6 +2,7 @@
 #include "led-matrix.h"
 #include <fstream>
 #include <chrono>
+#include "utf8.h"
 
 #define COMMANDS_PIPE "/tmp/LedCommandsPipe"
 #define USED_TEXTS "/tmp/LedTexts"
@@ -79,6 +80,10 @@ void DrawTextSegment(FrameCanvas *Canvas, rgb_matrix::Font &Font,
                          _Color, NULL, Text.c_str(), LetterSpacing);
 }
 
+size_t utf8_strlen(const std::string& str) {
+    return utf8::distance(str.begin(), str.end());
+};
+
 int main(int argc, char *argv[]) {
     std::string FontsPath = argv[1];
     if (FontsPath.back() != '/') {
@@ -86,7 +91,15 @@ int main(int argc, char *argv[]) {
     };
     RGBMatrix::Options MatrixOptions;
     MatrixOptions.rows = 64; 
-    MatrixOptions.cols = 128;
+    const char* panelWidthEnv = getenv("PANEL_WIDTH");
+    if (panelWidthEnv != nullptr) {
+        int panelWidth = std::atoi(panelWidthEnv);
+        if (panelWidth > 0) {
+            MatrixOptions.cols = panelWidth;
+        }else {
+			MatrixOptions.cols = 64;
+		};
+    };
     MatrixOptions.multiplexing = 0;
     MatrixOptions.parallel = 1;	
     MatrixOptions.chain_length = 1; 
@@ -146,6 +159,7 @@ int main(int argc, char *argv[]) {
                         TimeDisplayLine = -1;
                     }
                     UpdateLedTextsFile(LineTexts);
+					ScrollStates[Request.LineNumber - 1].IsScrolling = false;
                 }
             } else if (CommandName == "set_line_scroll") {
                 SetLineScrollRequest Request;
@@ -154,6 +168,7 @@ int main(int argc, char *argv[]) {
                     ScrollStates[LineIndex].IsScrolling = true;
                     ScrollStates[LineIndex].ScrollSpeed = Request.ScrollSpeed;
                     ScrollStates[LineIndex].CurrentOffset = 0;
+					ScrollStates[LineIndex].Text = LineTexts[LineIndex];
                     ScrollStates[LineIndex].LastScrollTime = std::chrono::steady_clock::now();
                 }
             } else if (CommandName == "set_line_time") {
@@ -199,29 +214,29 @@ int main(int argc, char *argv[]) {
                 }
             }
             int YPosition = 2 + 15 * Idx;
-            size_t TextLength = LineTexts[Idx].length();
             SetFont = &CFont;
-
-            if (ScrollStates[Idx].IsScrolling) {
-                auto Now = std::chrono::steady_clock::now();
-                auto ElapsedTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(Now - ScrollStates[Idx].LastScrollTime).count();
-                if (ElapsedTimeMs > ScrollStates[Idx].ScrollSpeed) {
-                    ScrollStates[Idx].CurrentOffset--;
-                    if (ScrollStates[Idx].CurrentOffset <= -128) {
-                        ScrollStates[Idx].CurrentOffset = ScrollStates[Idx].Text.length() * 6;
-                    }
-                    ScrollStates[Idx].LastScrollTime = Now;
-                }
-                for (int x = ScrollStates[Idx].CurrentOffset; x < 128; x += ScrollStates[Idx].Text.length() * 6 + 128) {
-                    DrawTextSegment(OffscreenCanvas, *SetFont, x, LineTexts[Idx], Colors[Idx], LetterSpacing, YPosition);
-                }
-            } else {
-                DrawTextSegment(OffscreenCanvas, *SetFont, XOffset, LineTexts[Idx], Colors[Idx], LetterSpacing, YPosition);
-            }
-        }
+			if (ScrollStates[Idx].IsScrolling) {
+				int TextOffsetLimit = utf8_strlen(LineTexts[Idx]) * 6;
+				auto Now = std::chrono::steady_clock::now();
+				auto ElapsedTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(Now - ScrollStates[Idx].LastScrollTime).count();
+				if (ElapsedTimeMs > 100) {
+					ScrollStates[Idx].CurrentOffset -= ScrollStates[Idx].ScrollSpeed;
+					if (ScrollStates[Idx].CurrentOffset < -TextOffsetLimit) {
+						ScrollStates[Idx].CurrentOffset = MatrixOptions.cols;
+						printf("HERE\n");
+					};
+					ScrollStates[Idx].LastScrollTime = Now;
+				};
+				//for (int x = ScrollStates[Idx].CurrentOffset; x < MatrixOptions.cols; x += TextOffsetLimit) {
+					DrawTextSegment(OffscreenCanvas, *SetFont, ScrollStates[Idx].CurrentOffset, LineTexts[Idx], Colors[Idx], LetterSpacing, YPosition);
+				//};
+			} else {
+				DrawTextSegment(OffscreenCanvas, *SetFont, XOffset, LineTexts[Idx], Colors[Idx], LetterSpacing, YPosition);
+			};
+        };
         OffscreenCanvas = Canvas->SwapOnVSync(OffscreenCanvas);
         usleep(100 * 1000);
-    }
+    };
     Canvas->Clear();
     delete Canvas;
     close(IncomingCommandsPipe);

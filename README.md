@@ -6,7 +6,9 @@ A library to control commonly available 64x64, 32x32 or 16x32 RGB LED panels.
 
 Supports ONE CHAIN with many panels each.
 
-app/ requires cJSON library to be installed on target system: https://github.com/DaveGamble/cJSON
+Application requires cJSON and UTF-8 library to be installed on target system: 
+1. https://github.com/DaveGamble/cJSON
+2. https://github.com/nemtrif/utfcpp
 
 you also need to install socat and jq utils for web server operation:
 ```

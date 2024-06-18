@@ -124,14 +124,24 @@ void DrawCircleCenter(RGBMatrix *Matrix, FrameCanvas *OffscreenCanvas, int radiu
 int ViewSplashScreen(bool ShowIP, bool ShowLogo, bool ShowSemaphore, unsigned char Red, unsigned char Green, unsigned char Blue) {
     RGBMatrix::Options MatrixOptions;
 	MatrixOptions.rows = 64; 
-	MatrixOptions.cols = 128;
+
+    const char* panelWidthEnv = getenv("PANEL_WIDTH");
+    if (panelWidthEnv != nullptr) {
+        int panelWidth = std::atoi(panelWidthEnv);
+        if (panelWidth > 0) {
+            MatrixOptions.cols = panelWidth;
+        }else {
+			MatrixOptions.cols = 64;
+		};
+    };
+	
 	MatrixOptions.multiplexing = 0;
 	MatrixOptions.parallel = 1;	
 	MatrixOptions.chain_length = 1; 
     MatrixOptions.row_address_type = 0;
     MatrixOptions.pwm_bits = 1;			
 	MatrixOptions.show_refresh_rate = true;
-	MatrixOptions.pwm_lsb_nanoseconds = 800;
+	MatrixOptions.pwm_lsb_nanoseconds = 600;
 	MatrixOptions.pwm_dither_bits = 2;
 	
 
@@ -185,12 +195,12 @@ int main(int argc, char *argv[]) {
     }
 
     for (int Idx = 2; Idx < argc; ++Idx) {
-        if (strcmp(argv[Idx], "-a") == 0) {
-            ShowIP = true;
-        }
         if (strcmp(argv[Idx], "-l") == 0) {
             ShowLogo = true;
-        }
+        };
+		if (strcmp(argv[Idx], "-a") == 0) {
+            ShowIP = true;
+        };
         if (strcmp(argv[Idx], "-s") == 0) {
             ShowSemaphore = true;
             if (Idx + 1 < argc) {
@@ -202,10 +212,9 @@ int main(int argc, char *argv[]) {
             } else {
                 std::cerr << "Missing color for semaphore mode.\n";
                 return 1;
-            }
-        }
-    }
-
+            };
+        };
+    };
     ViewSplashScreen(ShowIP, ShowLogo, ShowSemaphore, Red, Green, Blue);
     return 0;
-}
+};

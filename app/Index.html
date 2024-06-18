@@ -117,10 +117,12 @@
         <div class="tab">
             <button class="tablinks" onclick="openTab(event, 'SetText')" id="defaultOpen">Text</button>
             <button class="tablinks" onclick="openTab(event, 'SetTime')">Clock</button>
-			<button class="tablinks" onclick="openTab(event, 'SetScroll')">Scroll</button>
+            <button class="tablinks" onclick="openTab(event, 'SetScroll')">Scroll</button>
             <button class="tablinks" onclick="openTab(event, 'SetBlink')">Blink</button>
             <button class="tablinks" onclick="openTab(event, 'SplashBoot')">Splash</button>
+            <button class="tablinks" onclick="openTab(event, 'SetCircle')">Circle</button>
         </div>
+        
         <div id="SetText" class="tabcontent">
             <h2>Draw text on panel line</h2>
             <table>
@@ -133,23 +135,24 @@
                     <td><input type="text" id="text" name="text"></td>
                 </tr>
                 <tr>
-					<td>Color:</td>
-					<td>
-						<input type="hidden" id="selectedColor" value="#FFFFFF">
-						<div class="color-picker-wrapper">
-							<button class="color-button" style="background-color: #FF0000;" onclick="setColor('#FF0000')"></button>
-							<button class="color-button" style="background-color: #00FF00;" onclick="setColor('#00FF00')"></button>
-							<button class="color-button" style="background-color: #0000FF;" onclick="setColor('#0000FF')"></button>
-							<button class="color-button" style="background-color: #FFFF00;" onclick="setColor('#FFFF00')"></button> <!-- R+G -->
-							<button class="color-button" style="background-color: #FF00FF;" onclick="setColor('#FF00FF')"></button> <!-- R+B -->
-							<button class="color-button" style="background-color: #00FFFF;" onclick="setColor('#00FFFF')"></button> <!-- G+B -->
-							<button class="color-button" style="background-color: #FFFFFF;" onclick="setColor('#FFFFFF')"></button> <!-- R+G+B -->
-						</div>
-					</td>
+                    <td>Color:</td>
+                    <td>
+                        <input type="hidden" id="selectedColor" value="#FFFFFF">
+                        <div class="color-picker-wrapper">
+                            <button class="color-button" style="background-color: #FF0000;" onclick="setColor('#FF0000')"></button>
+                            <button class="color-button" style="background-color: #00FF00;" onclick="setColor('#00FF00')"></button>
+                            <button class="color-button" style="background-color: #0000FF;" onclick="setColor('#0000FF')"></button>
+                            <button class="color-button" style="background-color: #FFFF00;" onclick="setColor('#FFFF00')"></button> <!-- R+G -->
+                            <button class="color-button" style="background-color: #FF00FF;" onclick="setColor('#FF00FF')"></button> <!-- R+B -->
+                            <button class="color-button" style="background-color: #00FFFF;" onclick="setColor('#00FFFF')"></button> <!-- G+B -->
+                            <button class="color-button" style="background-color: #FFFFFF; border: 1px solid black;" onclick="setColor('#FFFFFF')"></button> <!-- R+G+B with border -->
+                        </div>
+                    </td>
                 </tr>
             </table>
             <button type="button" onclick="sendData('/set_line_text')">Send Request</button>
         </div>
+        
         <div id="SetTime" class="tabcontent">
             <h2>Show realtime-clock on panel line</h2>
             <table>
@@ -160,20 +163,22 @@
             </table>
             <button type="button" onclick="sendData('/set_line_time')">Send Request</button>
         </div>
-		 <div id="SetScroll" class="tabcontent">
-			<h2>Scroll text on panel line</h2>
-			<table>
-				<tr>
-					<td>Line Number:</td>
-					<td><input type="number" id="scroll_line_num" name="line_num" max="4"></td>
-				</tr>
-				<tr>
-					<td>Scroll Speed (ms):</td>
-					<td><input type="number" id="scroll_speed" name="scroll_speed"></td>
-				</tr>
-			</table>
-			<button type="button" onclick="sendData('/set_line_scroll')">Send Request</button>
-		</div>
+
+        <div id="SetScroll" class="tabcontent">
+            <h2>Scroll text on panel line</h2>
+            <table>
+                <tr>
+                    <td>Line Number:</td>
+                    <td><input type="number" id="scroll_line_num" name="line_num" max="4"></td>
+                </tr>
+                <tr>
+                    <td>Scroll Speed [1-4]:</td>
+                    <td><input type="number" id="scroll_speed" name="scroll_speed"></td>
+                </tr>
+            </table>
+            <button type="button" onclick="sendData('/set_line_scroll')">Send Request</button>
+        </div>
+        
         <div id="SetBlink" class="tabcontent">
             <h2>Set panel line blinking</h2>
             <table>
@@ -192,7 +197,7 @@
             </table>
             <button type="button" onclick="sendData('/set_line_blink')">Send Request</button>
         </div>
-    
+        
         <div id="SplashBoot" class="tabcontent">
             <h2>Company logotype viewer</h2>
             <table>
@@ -203,14 +208,40 @@
             </table>
             <button type="button" onclick="sendData('/set_splasher')">Send Request</button>
         </div>
-    
+        
+        <div id="SetCircle" class="tabcontent">
+            <h2>Set filled signal circle</h2>
+            <table>
+                <tr>
+                    <td>Color:</td>
+                    <td>
+                        <input type="hidden" id="circleColor" value="#FFFFFF">
+                        <div class="color-picker-wrapper">
+                            <button class="color-button" style="background-color: #FF0000;" onclick="setCircleColor('#FF0000')"></button>
+                            <button class="color-button" style="background-color: #00FF00;" onclick="setCircleColor('#00FF00')"></button>
+                            <button class="color-button" style="background-color: #0000FF;" onclick="setCircleColor('#0000FF')"></button>
+                            <button class="color-button" style="background-color: #FFFF00;" onclick="setCircleColor('#FFFF00')"></button> <!-- R+G -->
+                            <button class="color-button" style="background-color: #FF00FF;" onclick="setCircleColor('#FF00FF')"></button> <!-- R+B -->
+                            <button class="color-button" style="background-color: #00FFFF;" onclick="setCircleColor('#00FFFF')"></button> <!-- G+B -->
+                            <button class="color-button" style="background-color: #FFFFFF; border: 1px solid black;" onclick="setCircleColor('#FFFFFF')"></button> <!-- R+G+B with border -->
+                        </div>
+                    </td>
+                </tr>
+            </table>
+            <button type="button" onclick="sendData('/set_colored_circle')">Send Request</button>
+        </div>
+
     </center>
 
     <script>
-	
-		function setColor(colorValue) {
-			document.getElementById("selectedColor").value = colorValue;
-		}
+        function setColor(colorValue) {
+            document.getElementById("selectedColor").value = colorValue;
+        }
+
+        function setCircleColor(colorValue) {
+            document.getElementById("circleColor").value = colorValue;
+        }
+
         function openTab(evt, tabName) {
             var i, tabcontent, tablinks;
             tabcontent = document.getElementsByClassName("tabcontent");
@@ -232,7 +263,7 @@
             var xhr = new XMLHttpRequest();
             xhr.open("POST", endpoint, true);
             xhr.setRequestHeader("Content-Type", "application/json");
-            
+
             // Prepare data based on the endpoint
             var data = {};
             switch(endpoint) {
@@ -242,7 +273,7 @@
                     data = {
                         line_num: lineNumValue || 1, // Default to 1 if not provided
                         text: document.getElementById("text").value,
-                        color: colorValue === '#FFFFFF' ? "default" : colorValue // Check if color is default
+                        color: colorValue
                     };
                     break;
                 case '/set_line_time':
@@ -250,12 +281,12 @@
                         line_num: parseInt(document.getElementById("time_line_num").value, 10)
                     };
                     break;
-				case '/set_line_scroll':
-					data = {
-						line_num: parseInt(document.getElementById("scroll_line_num").value, 10),
-						scroll_speed: parseInt(document.getElementById("scroll_speed").value, 10)
-					};
-					break;
+                case '/set_line_scroll':
+                    data = {
+                        line_num: parseInt(document.getElementById("scroll_line_num").value, 10),
+                        scroll_speed: parseInt(document.getElementById("scroll_speed").value, 10)
+                    };
+                    break;
                 case '/set_line_blink':
                     data = {
                         line_num: parseInt(document.getElementById("blink_line_num").value, 10),
@@ -266,6 +297,12 @@
                 case '/set_splasher':
                     data = {
                         show_ip: document.getElementById("show_ip").checked
+                    };
+                    break;
+                case '/set_colored_circle':
+                    var circleColorValue = document.getElementById("circleColor").value;
+                    data = {
+                        color: circleColorValue
                     };
                     break;
                 default:
@@ -285,6 +322,4 @@
             };
         }
     </script>
-
 </body>
-
