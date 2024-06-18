@@ -32,7 +32,7 @@ systemctl start lc.service
 
 ### Rest API
 
-POST set_line_text
+#### POST set_line_text
 ```
 {
 	"line_num" : 1, // available lines: (1,2,3)
@@ -40,7 +40,7 @@ POST set_line_text
 	"color" : "FFFFFF" // used colors: (FF0000, 00FF00, 0000FF, FFFF00, FF00FF, 00FFFF)
 }
 ```
-POST set_all_lines
+#### POST set_all_lines
 ```
 {
 	"lines_out" : [
@@ -53,13 +53,13 @@ POST set_all_lines
 	]
 }
 ```
-POST set_line_time
+#### POST set_line_time
 ```
 {
 	"line_num" : 1
 }
 ```
-POST set_line_blink
+#### POST set_line_blink
 ```
 {
 	"line_num" : 1,
@@ -67,9 +67,15 @@ POST set_line_blink
 	"blink_time" : "10"  // [Sec]
 }
 ```
-POST set_splasher
+#### POST set_splasher
 ```
 {
 	"show_ip" : true | false 
+}
+```
+#### POST set_colored_circle
+```
+{
+	"color" : "FFFFFF"
 }
 ```
