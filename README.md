@@ -2,8 +2,6 @@ Controlling RGB LED display with Allwinner H3
 ============================================================
 This is a total hack of the Raspberry PI RGB Matrix Library.
 
-A library to control commonly available 64x64, 32x32 or 16x32 RGB LED panels.
-
 Supports ONE CHAIN with many panels each.
 
 Application requires cJSON and UTF-8 library to be installed on target system: 
@@ -29,6 +27,8 @@ systemctl reload-daemon
 systemctl enable lc.service
 systemctl start lc.service
 ```
+
+HTTP Server works on port: 13222
 
 ### Rest API
 
