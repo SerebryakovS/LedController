@@ -10,7 +10,7 @@ Application requires cJSON and UTF-8 library to be installed on target system:
 
 you also need to install socat and jq utils for web server operation:
 ```
-sudo apt-get install socat jq
+sudo apt-get install socat jq cmake
 ```
 and also some image magic libs for image processing:
 ```
