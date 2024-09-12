@@ -215,9 +215,13 @@ APIRequestsHandler() {
 };
 
 Main(){
-	sleep 5;
+    if [[ -z "$COMMANDS_PIPE" ]]; then
+        echo "Error: COMMANDS_PIPE is not set."
+        return 1
+    fi
+    sleep 5;
     eval "$(dirname "$SCRIPT_PATH")/Splasher" $FONTS_PATH -l -a &
-	RunHTTPServer 
+    RunHTTPServer 
 };
 
 if [ $# -eq 0 ]; then
