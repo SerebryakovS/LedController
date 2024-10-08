@@ -3,31 +3,28 @@ Controlling RGB LED display with Allwinner H3
 This is a total hack of the Raspberry PI RGB Matrix Library.
 
 Supports ONE CHAIN with many panels each.
-
-Application requires cJSON and UTF-8 library to be installed on target system: 
-1. https://github.com/DaveGamble/cJSON
-2. https://github.com/nemtrif/utfcpp
-
-you also need to install socat and jq utils for web server operation:
-```
-sudo apt-get install socat jq cmake
-```
-and also some image magic libs for image processing:
-```
-sudo apt-get install libmagick++-dev libgraphicsmagick++-dev libwebp-dev
-```
-don't forget to configure system timezone(if needed):
+### Installation
 ```
 sudo timedatectl set-timezone Asia/Almaty
+sudo apt-get update
+sudo apt-get install socat jq cmake -y
+git clone https://github.com/SerebryakovS/LedController.git
+git clone https://github.com/DaveGamble/cJSON.git
+cd cJSON/
+make && sudo make install
+cd ../LedController/
+make
+cd app/
+make Controller Splasher
+cd ../
+CURRENT_DIR=$(pwd)/app
+sed -i "s|<PATH_TO_SERVER_SH>|$CURRENT_DIR|g" "./lc.service"
+sudo cp lc.service /etc/systemd/system/lc.service
+sudo systemctl daemon-reload
+sudo systemctl enable lc.service
+sudo systemctl start lc.service
+reboot
 ```
-in root folder of project lc.service file located. Here you need to change software path and put to:
-```
-cp lc.service /etc/systemd/system/lc.service
-systemctl reload-daemon
-systemctl enable lc.service
-systemctl start lc.service
-```
-
 HTTP Server works on port: 13222
 
 ### Rest API
