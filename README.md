@@ -12,6 +12,7 @@ git clone https://github.com/SerebryakovS/LedController.git
 git clone https://github.com/DaveGamble/cJSON.git
 cd cJSON/
 make && sudo make install
+sudo ldconfig
 cd ../LedController/
 make
 cd app/
