@@ -1,15 +1,40 @@
 #!/bin/bash
 
 SCRIPT_PATH=$(realpath "${BASH_SOURCE[0]}")
-REST_PORT=13222
-cd "$(dirname "$0")";
-FONTS_PATH=../fonts/
+CONFIG_PATH="./config.json"
+FONTS_PATH="../fonts/"
 LOGO_PATH="./logo.png"
 COMMANDS_PIPE="/tmp/LedCommandsPipe"
 COMMANDS_RETRIES=3
 USED_TEXTS="/tmp/LedTexts"
 
-export PANEL_WIDTH=128
+if [[ ! -f "$CONFIG_PATH" ]]; then
+    echo "Creating config file with default values..."
+    cat > "$CONFIG_PATH" <<EOL
+{
+"SinglePanelWidth": 64,
+"SinglePanelHeight": 64,
+"PanelsChainCount": 1,
+"PwmLsbNanos": 300,
+"FontsPath": "../fonts/",
+"ColorScheme": "RGB",
+"RestPort": 13222
+}
+EOL
+fi
+
+SinglePanelWidth=$(jq ".SinglePanelWidth" "$CONFIG_PATH")
+SinglePanelHeight=$(jq ".SinglePanelHeight" "$CONFIG_PATH")
+PanelsChainCount=$(jq ".PanelsChainCount" "$CONFIG_PATH")
+PwmLsbNanos=$(jq ".PwmLsbNanos" "$CONFIG_PATH")
+FontsPath=$(jq -r ".FontsPath" "$CONFIG_PATH")
+ColorScheme=$(jq -r ".ColorScheme" "$CONFIG_PATH")
+REST_PORT=$(jq ".RestPort" "$CONFIG_PATH")
+
+UpdateConfig() {
+    KEY=$1; VALUE=$2;
+    jq --argjson val "$VALUE" ".$KEY = \$val" "$CONFIG_PATH" > tmp.$$.json && mv tmp.$$.json "$CONFIG_PATH"
+}
 
 RunHTTPServer() {
     socat TCP-LISTEN:$REST_PORT,fork,reuseaddr SYSTEM:"$SCRIPT_PATH APIRequestsHandler"
@@ -144,7 +169,7 @@ APIRequestsHandler() {
 			echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"success\"}"
 			;;
 			"/set_line_blink")
-				#KillStart Splasher Controller
+				KillStart Splasher Controller
 				LineNum=$(echo "$Body" | jq ".line_num");
 				BlinkFreq=$(echo "$Body" | jq ".blink_freq");
 				BlinkDuration=$(echo "$Body" | jq -r ".blink_time")
@@ -205,8 +230,29 @@ APIRequestsHandler() {
             KillStart Controller Splasher "-s $Red,$Green,$Blue"
             echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"success\"}"
             ;;
-        *)
-            echo -ne "HTTP/1.1 404 Not Found\r\nContent-Type: application/json\r\n\r\n{\"status\": \"error\", \"message\": \"Endpoint not found\"}"
+        "/set_config")
+            KillProcess Splasher
+            KillProcess Controller
+            SinglePanelWidth=$(echo "$Body" | jq ".panel_width // $SinglePanelWidth")
+            SinglePanelHeight=$(echo "$Body" | jq ".panel_height // $SinglePanelHeight")
+            PanelsChainCount=$(echo "$Body" | jq ".panels_chain_count // $PanelsChainCount")
+            PwmLsbNanos=$(echo "$Body" | jq ".pwm_lsb_nanos // $PwmLsbNanos")
+            FontsPath=$(echo "$Body" | jq -r ".fonts_path // \"$FontsPath\"")
+            ColorScheme=$(echo "$Body" | jq -r ".color_scheme // \"$ColorScheme\"")
+            # Update the config file
+            cat > "$CONFIG_PATH" <<EOL
+{
+    "SinglePanelWidth": $SinglePanelWidth,
+    "SinglePanelHeight": $SinglePanelHeight,
+    "PanelsChainCount": $PanelsChainCount,
+    "PwmLsbNanos": $PwmLsbNanos,
+    "FontsPath": "$FontsPath",
+    "ColorScheme": "$ColorScheme",
+    "RestPort": $REST_PORT
+}
+EOL
+            echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"config_updated\"}"
+            eval "$(dirname "$SCRIPT_PATH")/Splasher" $FontsPath -l -a &
             ;;
         *)
             echo -ne "HTTP/1.1 404 Not Found\r\nContent-Type: application/json\r\n\r\n{\"status\": \"error\", \"message\": \"Endpoint not found\"}"
@@ -214,19 +260,23 @@ APIRequestsHandler() {
     esac
 };
 
-Main(){
+Main() {
     if [[ -z "$COMMANDS_PIPE" ]]; then
         echo "Error: COMMANDS_PIPE is not set."
         return 1
     fi
-    sleep 5;
+    sleep 5
     eval "$(dirname "$SCRIPT_PATH")/Splasher" $FONTS_PATH -l -a &
-    RunHTTPServer 
-};
+    RunHTTPServer
+}
 
 if [ $# -eq 0 ]; then
-    echo "Running server on ports: $REST_PORT"
-    Main;
-elif [ $1 = "APIRequestsHandler" ];then
-    APIRequestsHandler $2;
-fi;
+    echo "Running server on port: $REST_PORT"
+    Main
+elif [ $1 = "APIRequestsHandler" ]; then
+    APIRequestsHandler $2
+fi
+
+
+
+

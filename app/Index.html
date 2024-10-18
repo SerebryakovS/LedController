@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>LED Controller</title>
     <style>
-    <style>
         body {
             font-family: 'Segoe UI', 'Roboto', sans-serif;
             margin: 0;
@@ -23,10 +22,10 @@
             overflow: hidden;
             padding: 20px;
             font-weight: bold;
-            max-width: 600px; 
+            max-width: 600px;
             margin: 20px auto;
-            display: flex; 
-            justify-content: center; 
+            display: flex;
+            justify-content: center;
         }
         .tab button {
             background-color: #00944c;
@@ -47,11 +46,9 @@
             padding: 20px;
             border: 1px solid #ccc;
             border-top: none;
-            max-width: 600px; 
-
+            max-width: 600px;
             background: white;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            
         }
         .tabcontent table {
             width: 100%;
@@ -77,35 +74,25 @@
             border: none;
             cursor: pointer;
         }
-
-        input[type="color"] {
-            padding-right: 30px; 
-            -webkit-appearance: none;
-            margin: 0;
-            width: 40%;
+        .color-picker-wrapper {
+            display: flex;
+            justify-content: space-around;
         }
-        input[type="color"]::-webkit-color-swatch-wrapper {
-            padding: 0;
-        }
-        input[type="color"]::-webkit-color-swatch {
+        .color-button {
+            width: 24px;
+            height: 24px;
             border: none;
+            margin: 2px;
+            cursor: pointer;
+            display: inline-block;
+            border-radius: 12px;
         }
-		
-		.color-button {
-			width: 24px;
-			height: 24px;
-			border: none;
-			margin: 2px;
-			cursor: pointer;
-			display: inline-block;
-			border-radius: 12px;
-		}
-		.color-button:focus {
-			outline: none;
-		}
-		.color-button:active {
-			opacity: 0.6;
-		}
+        .color-button:focus {
+            outline: none;
+        }
+        .color-button:active {
+            opacity: 0.6;
+        }
     </style>
 </head>
 <body>
@@ -121,8 +108,9 @@
             <button class="tablinks" onclick="openTab(event, 'SetBlink')">Blink</button>
             <button class="tablinks" onclick="openTab(event, 'SplashBoot')">Splash</button>
             <button class="tablinks" onclick="openTab(event, 'SetCircle')">Circle</button>
+            <button class="tablinks" onclick="openTab(event, 'Config')">Config</button>
         </div>
-        
+
         <div id="SetText" class="tabcontent">
             <h2>Draw text on panel line</h2>
             <table>
@@ -142,17 +130,17 @@
                             <button class="color-button" style="background-color: #FF0000;" onclick="setColor('#FF0000')"></button>
                             <button class="color-button" style="background-color: #00FF00;" onclick="setColor('#00FF00')"></button>
                             <button class="color-button" style="background-color: #0000FF;" onclick="setColor('#0000FF')"></button>
-                            <button class="color-button" style="background-color: #FFFF00;" onclick="setColor('#FFFF00')"></button> <!-- R+G -->
-                            <button class="color-button" style="background-color: #FF00FF;" onclick="setColor('#FF00FF')"></button> <!-- R+B -->
-                            <button class="color-button" style="background-color: #00FFFF;" onclick="setColor('#00FFFF')"></button> <!-- G+B -->
-                            <button class="color-button" style="background-color: #FFFFFF; border: 1px solid black;" onclick="setColor('#FFFFFF')"></button> <!-- R+G+B with border -->
+                            <button class="color-button" style="background-color: #FFFF00;" onclick="setColor('#FFFF00')"></button>
+                            <button class="color-button" style="background-color: #FF00FF;" onclick="setColor('#FF00FF')"></button>
+                            <button class="color-button" style="background-color: #00FFFF;" onclick="setColor('#00FFFF')"></button>
+                            <button class="color-button" style="background-color: #FFFFFF; border: 1px solid black;" onclick="setColor('#FFFFFF')"></button>
                         </div>
                     </td>
                 </tr>
             </table>
             <button type="button" onclick="sendData('/set_line_text')">Send Request</button>
         </div>
-        
+
         <div id="SetTime" class="tabcontent">
             <h2>Show realtime-clock on panel line</h2>
             <table>
@@ -178,7 +166,7 @@
             </table>
             <button type="button" onclick="sendData('/set_line_scroll')">Send Request</button>
         </div>
-        
+
         <div id="SetBlink" class="tabcontent">
             <h2>Set panel line blinking</h2>
             <table>
@@ -197,7 +185,7 @@
             </table>
             <button type="button" onclick="sendData('/set_line_blink')">Send Request</button>
         </div>
-        
+
         <div id="SplashBoot" class="tabcontent">
             <h2>Company logotype viewer</h2>
             <table>
@@ -208,7 +196,7 @@
             </table>
             <button type="button" onclick="sendData('/set_splasher')">Send Request</button>
         </div>
-        
+
         <div id="SetCircle" class="tabcontent">
             <h2>Set filled signal circle</h2>
             <table>
@@ -220,10 +208,10 @@
                             <button class="color-button" style="background-color: #FF0000;" onclick="setCircleColor('#FF0000')"></button>
                             <button class="color-button" style="background-color: #00FF00;" onclick="setCircleColor('#00FF00')"></button>
                             <button class="color-button" style="background-color: #0000FF;" onclick="setCircleColor('#0000FF')"></button>
-                            <button class="color-button" style="background-color: #FFFF00;" onclick="setCircleColor('#FFFF00')"></button> <!-- R+G -->
-                            <button class="color-button" style="background-color: #FF00FF;" onclick="setCircleColor('#FF00FF')"></button> <!-- R+B -->
-                            <button class="color-button" style="background-color: #00FFFF;" onclick="setCircleColor('#00FFFF')"></button> <!-- G+B -->
-                            <button class="color-button" style="background-color: #FFFFFF; border: 1px solid black;" onclick="setCircleColor('#FFFFFF')"></button> <!-- R+G+B with border -->
+                            <button class="color-button" style="background-color: #FFFF00;" onclick="setCircleColor('#FFFF00')"></button>
+                            <button class="color-button" style="background-color: #FF00FF;" onclick="setCircleColor('#FF00FF')"></button>
+                            <button class="color-button" style="background-color: #00FFFF;" onclick="setCircleColor('#00FFFF')"></button>
+                            <button class="color-button" style="background-color: #FFFFFF; border: 1px solid black;" onclick="setCircleColor('#FFFFFF')"></button>
                         </div>
                     </td>
                 </tr>
@@ -231,6 +219,36 @@
             <button type="button" onclick="sendData('/set_colored_circle')">Send Request</button>
         </div>
 
+        <div id="Config" class="tabcontent">
+            <h2>Update Config</h2>
+            <table>
+                <tr>
+                    <td>Single Panel Width:</td>
+                    <td><input type="number" id="panel_width" name="panel_width" value="64"></td>
+                </tr>
+                <tr>
+                    <td>Single Panel Height:</td>
+                    <td><input type="number" id="panel_height" name="panel_height" value="64"></td>
+                </tr>
+                <tr>
+                    <td>Panels Chain Count:</td>
+                    <td><input type="number" id="panels_chain_count" name="panels_chain_count" value="1"></td>
+                </tr>
+                <tr>
+                    <td>PWM LSB Nanos:</td>
+                    <td><input type="number" id="pwm_lsb_nanos" name="pwm_lsb_nanos" value="300"></td>
+                </tr>
+                <tr>
+                    <td>Fonts Path:</td>
+                    <td><input type="text" id="fonts_path" name="fonts_path" value="../fonts/"></td>
+                </tr>
+                <tr>
+                    <td>Fonts Path:</td>
+                    <td><input type="text" id="color_scheme" name="color_scheme" value="RGB"></td>
+                </tr>
+            </table>
+            <button type="button" onclick="sendConfigData()">Update Config</button>
+        </div>
     </center>
 
     <script>
@@ -256,7 +274,6 @@
             evt.currentTarget.className += " active";
         }
 
-        // Call to display the default tab
         document.getElementById("defaultOpen").click();
 
         function sendData(endpoint) {
@@ -264,14 +281,13 @@
             xhr.open("POST", endpoint, true);
             xhr.setRequestHeader("Content-Type", "application/json");
 
-            // Prepare data based on the endpoint
             var data = {};
             switch(endpoint) {
                 case '/set_line_text':
                     var lineNumValue = parseInt(document.getElementById("line_num").value, 10);
                     var colorValue = document.getElementById("selectedColor").value;
                     data = {
-                        line_num: lineNumValue || 1, // Default to 1 if not provided
+                        line_num: lineNumValue || 1,
                         text: document.getElementById("text").value,
                         color: colorValue
                     };
@@ -321,5 +337,33 @@
                 }
             };
         }
+
+        function sendConfigData() {
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/set_config", true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+
+            var data = {
+                panel_width: parseInt(document.getElementById("panel_width").value, 10) || 64,
+                panel_height: parseInt(document.getElementById("panel_height").value, 10) || 64,
+                panels_chain_count: parseInt(document.getElementById("panels_chain_count").value, 10) || 1,
+                pwm_lsb_nanos: parseInt(document.getElementById("pwm_lsb_nanos").value, 10) || 300,
+                fonts_path: document.getElementById("fonts_path").value || "../fonts/",
+                color_scheme: document.getElementById("color_scheme").value || "RGB"
+            };
+            console.log("send packet:",data)
+
+            xhr.send(JSON.stringify(data));
+
+            xhr.onload = function() {
+                if (xhr.status == 200) {
+                    var response = xhr.responseText;
+                    alert("Config Updated: " + response);
+                } else {
+                    alert("Error " + xhr.status + ": " + xhr.statusText);
+                }
+            };
+        }
     </script>
 </body>
+</html>

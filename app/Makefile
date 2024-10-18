@@ -1,5 +1,5 @@
 CXXFLAGS=-std=c++11 -O3 -W -Wall -Wextra -Wno-unused-parameter
-OBJECTS=Controller.o Splasher.o Json.o
+OBJECTS=Controller.o Splasher.o Json.o Config.o
 BINARIES=Controller Splasher
 
 RGB_LIB_DISTRIBUTION=..
@@ -20,14 +20,11 @@ all : $(BINARIES)
 $(RGB_LIBRARY): FORCE
 	$(MAKE) -C $(RGB_LIBDIR)
 
-Controller: Controller.o Json.o $(RGB_LIBRARY)
-	$(CXX) $(CXXFLAGS) Controller.o Json.o -o $@ $(LDFLAGS) -lcjson
+Controller: Controller.o Json.o Config.o $(RGB_LIBRARY)
+	$(CXX) $(CXXFLAGS) Controller.o Json.o Config.o -o $@ $(LDFLAGS) -lcjson
 
-SinglePanel: SinglePanel.o $(RGB_LIBRARY)
-	$(CXX) $(CXXFLAGS) SinglePanel.o -o $@ $(LDFLAGS)
-
-Splasher: Splasher.o $(RGB_LIBRARY)
-	$(CXX) $(CXXFLAGS) Splasher.o -o $@ $(LDFLAGS)
+Splasher: Splasher.o Config.o $(RGB_LIBRARY)
+	$(CXX) $(CXXFLAGS) Splasher.o Config.o -o $@ $(LDFLAGS) -lcjson
 
 ImageViewer: ImageViewer.o $(RGB_LIBRARY)
 	$(CXX) $(CXXFLAGS) ImageViewer.o -o $@ $(LDFLAGS) $(RGB_LDFLAGS) $(MAGICK_LDFLAGS)

@@ -40,3 +40,17 @@ int ParseSetLineTextRequest(const char *JsonString, SetLineTextRequest *Request)
 int ParseSetLineTimeRequest(const char *JsonString, SetLineTimeRequest *Request);
 int ParseSetLineBlinkRequest(const char *JsonString, SetLineBlinkRequest* Request);
 int ParseSetLineScrollRequest(const char *JsonString, SetLineScrollRequest* Request);
+
+
+typedef struct {
+    int  SinglePanelWidth;
+    int  SinglePanelHeight;
+    int  PanelsChainCount;
+    int  PwmLsbNanos;
+	char ColorScheme[6];
+    char FontsPath[256];
+} ControllerConfig;
+
+extern ControllerConfig Config;
+
+int8_t LoadConfig(void);

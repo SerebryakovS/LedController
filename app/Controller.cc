@@ -85,33 +85,31 @@ size_t utf8_strlen(const std::string& str) {
 };
 
 int main(int argc, char *argv[]) {
-    std::string FontsPath = argv[1];
-    if (FontsPath.back() != '/') {
-        FontsPath += "/";
+    if (LoadConfig() != EXIT_SUCCESS) {
+        fprintf(stderr, "[ERR]: Could not load config. Exiting.\n");
+        return 1;
     };
     RGBMatrix::Options MatrixOptions;
-    MatrixOptions.rows = 64; 
-    const char* panelWidthEnv = getenv("PANEL_WIDTH");
-    if (panelWidthEnv != nullptr) {
-        int panelWidth = std::atoi(panelWidthEnv);
-        if (panelWidth > 0) {
-            MatrixOptions.cols = panelWidth;
-        }else {
-			MatrixOptions.cols = 64;
-		};
-    };
+    MatrixOptions.rows = Config.SinglePanelHeight;
+    MatrixOptions.cols = Config.SinglePanelWidth * Config.PanelsChainCount;
+    MatrixOptions.chain_length = 1;
+    MatrixOptions.pwm_lsb_nanoseconds = Config.PwmLsbNanos;
+    MatrixOptions.led_rgb_sequence = Config.ColorScheme;
+
     MatrixOptions.multiplexing = 0;
-    MatrixOptions.parallel = 1;	
-    MatrixOptions.chain_length = 1; 
+    MatrixOptions.parallel = 1;
     MatrixOptions.row_address_type = 0;
     MatrixOptions.pwm_bits = 1;
     MatrixOptions.show_refresh_rate = true;
-    MatrixOptions.pwm_lsb_nanoseconds = 700;
-    MatrixOptions.pwm_dither_bits = 2;
-    //MatrixOptions.led_rgb_sequence = "BRG";
-	
+    // MatrixOptions.pwm_dither_bits = 2;
+
     rgb_matrix::RuntimeOptions RuntimeOpt;
 	
+    std::string FontsPath = std::string(Config.FontsPath);
+    if (FontsPath.back() != '/') {
+        FontsPath += "/";
+    };
+
     Color BackgroundColor(0, 0, 0);
     int LetterSpacing = 0;
     int IncomingCommandsPipe = OpenNonBlockingPipe(COMMANDS_PIPE);

@@ -291,6 +291,9 @@ RGBMatrix::Options::Options() :
   pwm_dither_bits(0),
   brightness(100),
 
+
+// #define RGB_SCAN_INTERLACED
+
 #ifdef RGB_SCAN_INTERLACED
     scan_mode(1),
 #else

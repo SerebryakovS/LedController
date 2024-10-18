@@ -8,6 +8,7 @@
 #include <ifaddrs.h>
 #include "graphics.h"
 #include <cmath>
+#include "Controller.h"
 
 #ifndef M_PI
 	#define M_PI 3.14159265358979323846
@@ -122,68 +123,58 @@ void DrawCircleCenter(RGBMatrix *Matrix, FrameCanvas *OffscreenCanvas, int radiu
 }
 
 int ViewSplashScreen(bool ShowIP, bool ShowLogo, bool ShowSemaphore, unsigned char Red, unsigned char Green, unsigned char Blue) {
+    // Load configuration
+    if (LoadConfig() != EXIT_SUCCESS) {
+        fprintf(stderr, "[ERR]: Could not load config. Exiting.\n");
+        return 1;
+    };
+
     RGBMatrix::Options MatrixOptions;
-	MatrixOptions.rows = 64; 
+    MatrixOptions.rows = Config.SinglePanelHeight;
+    MatrixOptions.cols = Config.SinglePanelWidth * Config.PanelsChainCount;
+    MatrixOptions.chain_length = 1;
+    MatrixOptions.pwm_lsb_nanoseconds = Config.PwmLsbNanos;
+    MatrixOptions.pwm_bits=1;
+    MatrixOptions.show_refresh_rate = true;
+    MatrixOptions.led_rgb_sequence = Config.ColorScheme;
 
-  //   const char* panelWidthEnv = getenv("PANEL_WIDTH");
-  //   if (panelWidthEnv != nullptr) {
-  //       int panelWidth = std::atoi(panelWidthEnv);
-  //       if (panelWidth > 0) {
-  //           MatrixOptions.cols = panelWidth;
-  //       }else {
-		// 	MatrixOptions.cols = 64;
-		// };
-  //   };
-	
-    MatrixOptions.cols = 64*4;
-
-	MatrixOptions.multiplexing = 0;
-	MatrixOptions.parallel = 1;
-	MatrixOptions.chain_length = 1; 
-    MatrixOptions.row_address_type = 0;
-    MatrixOptions.pwm_bits = 1;
-	MatrixOptions.show_refresh_rate = true;
-	MatrixOptions.pwm_lsb_nanoseconds = 600;
-	// MatrixOptions.pwm_dither_bits = 2;
-	
-
-	
     rgb_matrix::RuntimeOptions RuntimeOpt;
-	RGBMatrix *Matrix = RGBMatrix::CreateFromOptions(MatrixOptions, RuntimeOpt);
+    RGBMatrix *Matrix = RGBMatrix::CreateFromOptions(MatrixOptions, RuntimeOpt);
     if (Matrix == NULL) {
         std::cerr << "Could not create matrix object.\n";
         return 1;
-    };
+    }
+
     signal(SIGTERM, InterruptHandler);
     signal(SIGINT, InterruptHandler);
 
     FrameCanvas *OffscreenCanvas = Matrix->CreateFrameCanvas();
-		
+
     if (ShowLogo) {
         if (!DisplayLogoPatternCenter(Matrix, &MatrixOptions, OffscreenCanvas)) {
             std::cerr << "Displaying image failed.\n";
             delete Matrix;
             return -EXIT_FAILURE;
-        };
-    };
+        }
+    }
     if (ShowIP) {
         std::string IpAddress = GetIpAddress();
         if (!IpAddress.empty()) {
             DrawIPAddress(Matrix, &MatrixOptions, IpAddress, OffscreenCanvas);
-        };
-    };
+        }
+    }
     if (ShowSemaphore) {
         DrawCircleCenter(Matrix, OffscreenCanvas, 20, Red, Green, Blue);
-    };
-	
+    }
+
     Matrix->SwapOnVSync(OffscreenCanvas);
     while (!InterruptReceived) {
         sleep(1);
-    };
+    }
     std::cout << "Exiting splash viewer\n";
     delete Matrix;
     return 0;
-};
+}
 
 int main(int argc, char *argv[]) {
     bool ShowIP = false;
