@@ -89,7 +89,7 @@ private:
   inline void WriteSetBits(gpio_bits_t value) {
     for (size_t i = 0; i < 14; ++i) {
         if (value & (1 << i)) {
-            gpio_set_output_value(&hub75_gpio[i], 1);
+            gpio_set_output_value(&hub75_gpio[i]);
         }
     }
   }
@@ -97,7 +97,7 @@ private:
   inline void WriteClrBits(gpio_bits_t value) {
     for (size_t i = 0; i < 14; ++i) {
         if (value & (1 << i)) {
-            gpio_set_output_value(&hub75_gpio[i], 0);
+            gpio_reset_output_value(&hub75_gpio[i]);
         }
     }
   }

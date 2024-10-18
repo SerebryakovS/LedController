@@ -125,24 +125,26 @@ int ViewSplashScreen(bool ShowIP, bool ShowLogo, bool ShowSemaphore, unsigned ch
     RGBMatrix::Options MatrixOptions;
 	MatrixOptions.rows = 64; 
 
-    const char* panelWidthEnv = getenv("PANEL_WIDTH");
-    if (panelWidthEnv != nullptr) {
-        int panelWidth = std::atoi(panelWidthEnv);
-        if (panelWidth > 0) {
-            MatrixOptions.cols = panelWidth;
-        }else {
-			MatrixOptions.cols = 64;
-		};
-    };
+  //   const char* panelWidthEnv = getenv("PANEL_WIDTH");
+  //   if (panelWidthEnv != nullptr) {
+  //       int panelWidth = std::atoi(panelWidthEnv);
+  //       if (panelWidth > 0) {
+  //           MatrixOptions.cols = panelWidth;
+  //       }else {
+		// 	MatrixOptions.cols = 64;
+		// };
+  //   };
 	
+    MatrixOptions.cols = 64*4;
+
 	MatrixOptions.multiplexing = 0;
-	MatrixOptions.parallel = 1;	
+	MatrixOptions.parallel = 1;
 	MatrixOptions.chain_length = 1; 
     MatrixOptions.row_address_type = 0;
-    MatrixOptions.pwm_bits = 1;			
+    MatrixOptions.pwm_bits = 1;
 	MatrixOptions.show_refresh_rate = true;
 	MatrixOptions.pwm_lsb_nanoseconds = 600;
-	MatrixOptions.pwm_dither_bits = 2;
+	// MatrixOptions.pwm_dither_bits = 2;
 	
 
 	

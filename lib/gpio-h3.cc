@@ -84,25 +84,37 @@ int gpio_set_output(struct gpio_t* p)
 	return 0;
 }
 
-int gpio_set_output_value(struct gpio_t* p, const uint32_t v) {
-    if (!(v == 1 || v == 0)) {
-        FATAL_ERRORF("v is not valid %d", v);
-        return -1;
-    }
 
-    uint32_t dv = *p->dat_ptr;
-    uint32_t mask = 1 << p->idx;
-
-    if (v == 1) {
-        dv |= mask; // Set the bit
-    } else {
-        dv &= ~mask; // Clear the bit
-    }
-
-    *p->dat_ptr = dv;
-    __sync_synchronize();
+int gpio_set_output_value(struct gpio_t* p) {
+	*p->dat_ptr |= (1 << p->idx);
+    // __sync_synchronize();
     return 0;
-}
+};
+int gpio_reset_output_value(struct gpio_t* p) {
+	*p->dat_ptr &= ~(1 << p->idx);
+    // __sync_synchronize();
+    return 0;
+};
+
+// int gpio_set_output_value(struct gpio_t* p, const uint32_t v) {
+//     if (!(v == 1 || v == 0)) {
+//         FATAL_ERRORF("v is not valid %d", v);
+//         return -1;
+//     }
+//
+//     uint32_t dv = *p->dat_ptr;
+//     uint32_t mask = 1 << p->idx;
+//
+//     if (v == 1) {
+//         dv |= mask; // Set the bit
+//     } else {
+//         dv &= ~mask; // Clear the bit
+//     }
+//
+//     *p->dat_ptr = dv;
+//     __sync_synchronize();
+//     return 0;
+// }
 
 /*
 int gpio_set_output_value(struct gpio_t* p, const uint32_t v)
