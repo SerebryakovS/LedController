@@ -5,7 +5,7 @@
 ##
 OBJECTS=gpio.o led-matrix.o options-initialize.o framebuffer.o \
         thread.o bdf-font.o graphics.o led-matrix-c.o hardware-mapping.o \
-        pixel-mapper.o multiplex-mappers.o gpio-h3.o \
+        pixel-mapper.o multiplex-mappers.o gpio-allwinner.o \
 	content-streamer.o
 
 TARGET=librgbmatrix
@@ -187,7 +187,7 @@ led-matrix.o: led-matrix.cc $(INCDIR)/led-matrix.h
 thread.o : thread.cc $(INCDIR)/thread.h
 framebuffer.o: framebuffer.cc framebuffer-internal.h
 graphics.o: graphics.cc utf8-internal.h
-gpio-h3.o: gpio-h3.cc gpio-h3.h comm-h3.h
+gpio-allwinner.o: gpio-allwinner.cc gpio-allwinner.h comm-h3.h
 
 %.o : %.cc compiler-flags
 	$(CXX) -I$(INCDIR) $(CXXFLAGS) -c -o $@ $<

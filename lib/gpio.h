@@ -18,7 +18,7 @@
 
 #include "gpio-bits.h"
 #include <vector>
-#include "gpio-h3.h"
+#include "gpio-allwinner.h"
 #include "hardware-mapping.h"
 
 extern struct gpio_t      hub75_gpio[14];
@@ -87,19 +87,29 @@ private:
   }
 
   inline void WriteSetBits(gpio_bits_t value) {
+
+#ifdef defined(H3)
     for (size_t i = 0; i < 14; ++i) {
         if (value & (1 << i)) {
             gpio_set_output_value(&hub75_gpio[i]);
         }
     }
+#elif defined(H618)
+  gpio_set_port_value(hub75_gpio, value);
+#endif
   }
 
   inline void WriteClrBits(gpio_bits_t value) {
+
+#ifdef defined(H3)
     for (size_t i = 0; i < 14; ++i) {
         if (value & (1 << i)) {
             gpio_reset_output_value(&hub75_gpio[i]);
         }
     }
+#elif defined(H618)
+  gpio_clear_port_value(hub75_gpio, value);
+#endif
   }
 
 private:

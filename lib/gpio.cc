@@ -29,9 +29,6 @@
 #include <time.h>
 #include <unistd.h>
 
-//static const off_t GPIO_REG_BASE=0x01C20000;
-//static const size_t GPIO_REG_OFF=0x800;
-//static const size_t GPIO_REG_LEN=0x1800;
 struct gpio_t hub75_gpio[14] = {0};
 struct gpio_bank_t hub75_bank;
 //static uint32_t*   h3_gpio_hack=NULL;
@@ -142,20 +139,42 @@ gpio_bits_t GPIO::InitOutputs(gpio_bits_t outputs,
     return 0;
   }
 
+
+#ifdef defined(H3)
+
    gpio_init(&hub75_gpio[ 0], "PG06"); //  8 |  OE
    gpio_init(&hub75_gpio[ 1], "PC02"); // 23 | CLK
    gpio_init(&hub75_gpio[ 2], "PA01"); // 22 | STB
-   gpio_init(&hub75_gpio[ 3], "PC00"); // 19 |   A 
+   gpio_init(&hub75_gpio[ 3], "PC00"); // 19 |   A
    gpio_init(&hub75_gpio[ 4], "PG08"); // 16 |   B
    gpio_init(&hub75_gpio[ 5], "PC01"); // 21 |   C
    gpio_init(&hub75_gpio[ 6], "PG09"); // 18 |   D
    gpio_init(&hub75_gpio[ 7], "PC03"); // 24 |   E
    gpio_init(&hub75_gpio[ 8], "PG11"); //  7 |  R1
    gpio_init(&hub75_gpio[ 9], "PG07"); // 10 |  G1
-   gpio_init(&hub75_gpio[10], "PA00"); // 11 |  B1 
+   gpio_init(&hub75_gpio[10], "PA00"); // 11 |  B1
    gpio_init(&hub75_gpio[11], "PA02"); // 13 |  R2
    gpio_init(&hub75_gpio[12], "PA06"); // 12 |  G2
    gpio_init(&hub75_gpio[13], "PA03"); // 15 |  B2
+
+#elif defined(H618)
+
+   gpio_init(&hub75_gpio[ 0], "PI13"); // 15 |  OE
+   gpio_init(&hub75_gpio[ 1], "PI01"); // 13 | CLK
+   gpio_init(&hub75_gpio[ 2], "PI10"); // 14 | STB
+   gpio_init(&hub75_gpio[ 3], "PI06"); //  9 |   A
+   gpio_init(&hub75_gpio[ 4], "PI15"); // 10 |   B
+   gpio_init(&hub75_gpio[ 5], "PI14"); // 11 |   C
+   gpio_init(&hub75_gpio[ 6], "PI00"); // 12 |   D
+   gpio_init(&hub75_gpio[ 7], "PI12"); //  8 |   E
+   gpio_init(&hub75_gpio[ 8], "PI03"); //  1 |  R1
+   gpio_init(&hub75_gpio[ 9], "PI16"); //  2 |  G1
+   gpio_init(&hub75_gpio[10], "PI04"); //  3 |  B1
+   gpio_init(&hub75_gpio[11], "PI11"); //  5 |  R2
+   gpio_init(&hub75_gpio[12], "PI02"); //  6 |  G2
+   gpio_init(&hub75_gpio[13], "PI09"); //  7 |  B2
+
+#endif
 
 
 	for ( uint32_t i = 0; i < 14; i++ ) {
@@ -163,7 +182,7 @@ gpio_bits_t GPIO::InitOutputs(gpio_bits_t outputs,
 	}
 	hub75_bank.size = 14;
 
-  gpio_bank_set_output(&hub75_bank);  
+  gpio_bank_set_output(&hub75_bank);
 
   // Epic Hack: get the memory address to the uint32_t that controls PORTA on Allwinner H3
   // directly modify the bits here to control the GPIO output.

@@ -1,7 +1,7 @@
 {
     "SinglePanelWidth": 64,
     "SinglePanelHeight": 64,
-    "PanelsChainCount": 2,
+    "PanelsChainCount": 6,
     "PwmLsbNanos": 300,
     "FontsPath": "../fonts/",
     "ColorScheme": "BRG",
