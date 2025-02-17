@@ -346,6 +346,12 @@ Framebuffer::~Framebuffer() {
   delete [] bitplane_buffer_;
 }
 
+
+
+
+
+
+
 // TODO: this should also be parsed from some special formatted string, e.g.
 // {addr={22,23,24,25,15},oe=18,clk=17,strobe=4, p0={11,27,7,8,9,10},...}
 /* static */ void Framebuffer::InitHardwareMapping(const char *named_hardware) {

@@ -82,11 +82,21 @@ int gpio_init(struct gpio_t* p, const char* name) {
     p->reg_clear_mask = ~(0xF << (p->reg_idx * 4));
     p->data_clear_mask = ~(1 << p->idx);
 
-    DBG_MSG("bank = %c, idx = %d, reg_off = %d, reg_idx = %d, reg = 0x%08x, clear_mask = 0x%08x",
-            bank, p->idx, p->reg_off, p->reg_idx, *(p->reg_ptr), p->reg_clear_mask);
+    // === SET DRIVE STRENGTH TO LEVEL 3 (STRONGEST) ===
+    uint32_t *drv_reg = p_gpio + (0x134 / 4) + (p->idx / 16);  // Select PI_DRV0 or PI_DRV1
+    uint8_t shift = (p->idx % 16) * 2;  // Each pin has 2 bits in the register
+
+    uint32_t drv_val = *drv_reg;
+    drv_val &= ~(0x3 << shift);  // Clear current setting
+    drv_val |= (3 << shift);     // Set Level 3 (strongest)
+    *drv_reg = drv_val;
+    __sync_synchronize();
+
+    DBG_MSG("GPIO PI%d Drive Strength Set: 0x%08X", p->idx, *drv_reg);
 
     return 0;
 }
+
 
 
 // int gpio_set_func(struct gpio_t* p, uint32_t i)
@@ -119,33 +129,6 @@ int gpio_set_func(struct gpio_t* p, uint32_t i) {
         return -1;
     }
     DBG_MSG("Function set correctly for %s: 0x%08x", p->name, read_back);
-    return 0;
-}
-
-
-int gpio_set_output_value(struct gpio_t* p) {
-    uint32_t mask = (1 << p->idx);
-    *p->dat_ptr |= mask;
-    __sync_synchronize();
-
-    // uint32_t read_back = *p->dat_ptr;
-    // if ((read_back & mask) != mask) {
-    //     FATAL_ERRORF("Failed to set output high for %s: expected 0x%08x, got 0x%08x", p->name, mask, read_back);
-    //     return -1;
-    // }
-    return 0;
-}
-
-int gpio_reset_output_value(struct gpio_t* p) {
-    uint32_t mask = (1 << p->idx);
-    *p->dat_ptr &= ~mask;
-    __sync_synchronize();
-
-    // uint32_t read_back = *p->dat_ptr;
-    // if ((read_back & mask) != 0) {
-    //     FATAL_ERRORF("Failed to set output low for %s: expected 0x00000000, got 0x%08x", p->name, read_back);
-    //     return -1;
-    // }
     return 0;
 }
 
@@ -218,20 +201,92 @@ int gpio_bank_read(struct gpio_bank_t* pbank)
 	return 0;
 }
 
-void gpio_set_port_value(struct gpio_t *p, uint32_t value) {
+int gpio_set_output_value(struct gpio_t* p) {
+    uint32_t mask = (1 << p->idx);
+    *p->dat_ptr |= mask;
+    __sync_synchronize();
 
-    for (size_t i = 0; i < 14; ++i) {
-        if (value & (1 << i)) {
-            gpio_set_output_value(p+i);
-        }
-    }
+    // uint32_t read_back = *p->dat_ptr;
+    // if ((read_back & mask) != mask) {
+    //     FATAL_ERRORF("Failed to set output high for %s: expected 0x%08x, got 0x%08x", p->name, mask, read_back);
+    //     return -1;
+    // }
+    return 0;
+}
+
+int gpio_reset_output_value(struct gpio_t* p) {
+    uint32_t mask = (1 << p->idx);
+    *p->dat_ptr &= ~mask;
+    __sync_synchronize();
+
+    // uint32_t read_back = *p->dat_ptr;
+    // if ((read_back & mask) != 0) {
+    //     FATAL_ERRORF("Failed to set output low for %s: expected 0x00000000, got 0x%08x", p->name, read_back);
+    //     return -1;
+    // }
+    return 0;
+}
+
+// Precomputed GPIO index mapping (adjust this based on your real mapping)
+static const uint32_t bit_remap_table[14] = {
+    13, 1, 10, 6, 15, 14, 0, 12, 3, 16, 4, 11, 2, 9
 };
+
+void gpio_set_port_value(struct gpio_t *p, uint32_t value) {
+    uint32_t *dat_ptr = p->dat_ptr;
+    uint32_t mask = 0;
+
+    // Apply mapping directly using bitwise operations (no loop)
+    mask = ((value & (1 << 0)) ? (1 << bit_remap_table[0]) : 0) |
+    ((value & (1 << 1)) ? (1 << bit_remap_table[1]) : 0) |
+    ((value & (1 << 2)) ? (1 << bit_remap_table[2]) : 0) |
+    ((value & (1 << 3)) ? (1 << bit_remap_table[3]) : 0) |
+    ((value & (1 << 4)) ? (1 << bit_remap_table[4]) : 0) |
+    ((value & (1 << 5)) ? (1 << bit_remap_table[5]) : 0) |
+    ((value & (1 << 6)) ? (1 << bit_remap_table[6]) : 0) |
+    ((value & (1 << 7)) ? (1 << bit_remap_table[7]) : 0) |
+    ((value & (1 << 8)) ? (1 << bit_remap_table[8]) : 0) |
+    ((value & (1 << 9)) ? (1 << bit_remap_table[9]) : 0) |
+    ((value & (1 << 10)) ? (1 << bit_remap_table[10]) : 0) |
+    ((value & (1 << 11)) ? (1 << bit_remap_table[11]) : 0) |
+    ((value & (1 << 12)) ? (1 << bit_remap_table[12]) : 0) |
+    ((value & (1 << 13)) ? (1 << bit_remap_table[13]) : 0);
+
+    // Debugging
+    // DBG_MSG("SET Mask: 0x%08X", mask);
+
+    // Apply the mask in one operation
+    *dat_ptr |= mask;
+    __sync_synchronize();
+}
 
 void gpio_clear_port_value(struct gpio_t *p, uint32_t value) {
+    uint32_t *dat_ptr = p->dat_ptr;
+    uint32_t mask = 0;
 
-    for (size_t i = 0; i < 14; ++i) {
-        if (value & (1 << i)) {
-            gpio_reset_output_value(p+i);
-        }
-    }
-};
+    // Apply mapping directly using bitwise operations (no loop)
+    mask = ((value & (1 << 0)) ? (1 << bit_remap_table[0]) : 0) |
+    ((value & (1 << 1)) ? (1 << bit_remap_table[1]) : 0) |
+    ((value & (1 << 2)) ? (1 << bit_remap_table[2]) : 0) |
+    ((value & (1 << 3)) ? (1 << bit_remap_table[3]) : 0) |
+    ((value & (1 << 4)) ? (1 << bit_remap_table[4]) : 0) |
+    ((value & (1 << 5)) ? (1 << bit_remap_table[5]) : 0) |
+    ((value & (1 << 6)) ? (1 << bit_remap_table[6]) : 0) |
+    ((value & (1 << 7)) ? (1 << bit_remap_table[7]) : 0) |
+    ((value & (1 << 8)) ? (1 << bit_remap_table[8]) : 0) |
+    ((value & (1 << 9)) ? (1 << bit_remap_table[9]) : 0) |
+    ((value & (1 << 10)) ? (1 << bit_remap_table[10]) : 0) |
+    ((value & (1 << 11)) ? (1 << bit_remap_table[11]) : 0) |
+    ((value & (1 << 12)) ? (1 << bit_remap_table[12]) : 0) |
+    ((value & (1 << 13)) ? (1 << bit_remap_table[13]) : 0);
+
+    // Debugging
+    // DBG_MSG("CLEAR Mask: 0x%08X", mask);
+
+    // Apply the mask in one operation
+    *dat_ptr &= ~mask;
+    __sync_synchronize();
+}
+
+
+
