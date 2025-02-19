@@ -18,6 +18,35 @@ std::string FontsPath;
 
 using namespace rgb_matrix;
 
+void FillScreenWithColor(RGBMatrix *Matrix, FrameCanvas *OffscreenCanvas, unsigned char Red, unsigned char Green, unsigned char Blue) {
+    for (int y = 0; y < Matrix->height(); y++) {
+        for (int x = 0; x < Matrix->width(); x++) {
+            OffscreenCanvas->SetPixel(x, y, Red, Green, Blue);
+        }
+    }
+}
+
+void DisplayStatusMessage(RGBMatrix *Matrix, FrameCanvas *OffscreenCanvas, const std::string &Message, unsigned char TextRed, unsigned char TextGreen, unsigned char TextBlue) {
+    rgb_matrix::Font Font;
+    if (!Font.LoadFont((FontsPath + "8x13.bdf").c_str())) {
+        std::cerr << "[ERR]: Could not load font.\n";
+        return;
+    }
+    int FooterHeight = 20;
+    int TextLength = 8 * Message.length();
+    int XOffset = (Matrix->width() - TextLength) / 2;
+    int YOffset = Matrix->height() - 6;
+
+    // Draw black footer
+    for (int y = Matrix->height() - FooterHeight; y < Matrix->height(); y++) {
+        for (int x = 0; x < Matrix->width(); x++) {
+            OffscreenCanvas->SetPixel(x, y, 0, 0, 0);
+        }
+    }
+    Color TextColor(255, 255, 255);
+    rgb_matrix::DrawText(OffscreenCanvas, Font, XOffset, YOffset, TextColor, nullptr, Message.c_str(), 0);
+}
+
 std::string GetIpAddress() {
     struct ifaddrs *InterfaceAddressList, *CurrentInterface;
     std::string IpAddress;
@@ -47,11 +76,11 @@ std::string GetIpAddress() {
 };
 
 void DrawIPAddress(RGBMatrix *Matrix, RGBMatrix::Options *MatrixOptions, const std::string &IpAddress, FrameCanvas *OffscreenCanvas) {
-    rgb_matrix::Font Font; 
+    rgb_matrix::Font Font;
 	if (!Font.LoadFont((FontsPath + "4x6.bdf").c_str())){
 		printf("_____[ERR]: Could not load font..\n");
 	};
-    int TextLength = 4 * IpAddress.length(); 
+    int TextLength = 4 * IpAddress.length();
 	int XOffset = Matrix->width()/2 - TextLength / 2;
     Color _Color(0, 255, 0);
 	rgb_matrix::DrawText(OffscreenCanvas, Font, XOffset+1, MatrixOptions->rows * 4/5 , _Color, nullptr, IpAddress.c_str(), 0);
@@ -66,11 +95,13 @@ struct RGB {
     uint8_t Red, Green, Blue;
 };
 
-bool DisplayLogoPatternCenter(RGBMatrix *Matrix, RGBMatrix::Options *MatrixOptions, FrameCanvas *OffscreenCanvas) {
+bool DisplayLogoPatternCenter(RGBMatrix *Matrix, RGBMatrix::Options *MatrixOptions, FrameCanvas *OffscreenCanvas, const std::string &LogoType) {
     OffscreenCanvas->Clear();
-    RGB ColorOne = {21, 127, 255}; 
-    RGB ColorTwo = {0,  255, 145}; 
-    const int LogoPattern[16][64] = {
+
+    RGB ColorOne, ColorTwo;
+    const int (*LogoPattern)[64];
+
+    static const int LogoPatternOne[16][64] = {
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
@@ -88,6 +119,38 @@ bool DisplayLogoPatternCenter(RGBMatrix *Matrix, RGBMatrix::Options *MatrixOptio
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
     };
+
+    static const int LogoPatternTwo[16][64] = {
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 ,1,1,1,1,1,1,1,1,1,1,0,0,0,1,2,2,2,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 ,1,1,1,1,1,1,1,1,1,1,0,0,0,1,2,2,2,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 ,1,1,1,1,1,1,1,1,1,1,0,0,0,1,2,2,2,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 ,1,1,1,1,1,1,1,1,1,1,0,0,0,1,2,2,2,2,2,2,2, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 ,1,1,1,1,1,1,1,1,1,1,0,0,0,1,2,2,2,2,2,2,2, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 ,1,1,1,1,1,1,1,1,1,1,0,0,0,1,1,2,2,2,2,2,2, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 ,1,1,1,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 ,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 ,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 ,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 ,0,0,0,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 ,0,0,0,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 ,0,0,0,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 ,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 ,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 ,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+    };
+
+    if (LogoType == "parqour") {
+        ColorOne = {21, 127, 255};  // Blue
+        ColorTwo = {0,  255, 145};  // Green
+        LogoPattern = LogoPatternOne;
+    } else if (LogoType == "damu") {
+        ColorOne = {139, 195, 74};  // Greenish
+        ColorTwo = {255, 235, 59};  // Yellowish
+        LogoPattern = LogoPatternTwo;
+    } else {
+        std::cerr << "Unknown logo type: " << LogoType << std::endl;
+        return false;
+    }
 
     int YOffset = Matrix->height() / 2 - 8;
 	int XOffset = 0;
@@ -122,8 +185,7 @@ void DrawCircleCenter(RGBMatrix *Matrix, FrameCanvas *OffscreenCanvas, int radiu
     }
 }
 
-int ViewSplashScreen(bool ShowIP, bool ShowLogo, bool ShowSemaphore, unsigned char Red, unsigned char Green, unsigned char Blue) {
-    // Load configuration
+int ViewSplashScreen(bool ShowIP, bool ShowLogo, bool ShowSemaphore, unsigned char Red, unsigned char Green, unsigned char Blue, const std::string &Message, const std::string &LogoType) {
     if (LoadConfig() != EXIT_SUCCESS) {
         fprintf(stderr, "[ERR]: Could not load config. Exiting.\n");
         return 1;
@@ -132,7 +194,6 @@ int ViewSplashScreen(bool ShowIP, bool ShowLogo, bool ShowSemaphore, unsigned ch
     RGBMatrix::Options MatrixOptions;
     MatrixOptions.rows = Config.SinglePanelHeight;
     MatrixOptions.cols = Config.SinglePanelWidth * Config.PanelsChainCount;
-    MatrixOptions.chain_length = 1;
     MatrixOptions.pwm_lsb_nanoseconds = Config.PwmLsbNanos;
     MatrixOptions.pwm_bits=1;
     MatrixOptions.show_refresh_rate = true;
@@ -151,7 +212,7 @@ int ViewSplashScreen(bool ShowIP, bool ShowLogo, bool ShowSemaphore, unsigned ch
     FrameCanvas *OffscreenCanvas = Matrix->CreateFrameCanvas();
 
     if (ShowLogo) {
-        if (!DisplayLogoPatternCenter(Matrix, &MatrixOptions, OffscreenCanvas)) {
+        if (!DisplayLogoPatternCenter(Matrix, &MatrixOptions, OffscreenCanvas, LogoType)) {
             std::cerr << "Displaying image failed.\n";
             delete Matrix;
             return -EXIT_FAILURE;
@@ -164,7 +225,10 @@ int ViewSplashScreen(bool ShowIP, bool ShowLogo, bool ShowSemaphore, unsigned ch
         }
     }
     if (ShowSemaphore) {
-        DrawCircleCenter(Matrix, OffscreenCanvas, 20, Red, Green, Blue);
+        FillScreenWithColor(Matrix, OffscreenCanvas, Red, Green, Blue);
+    }
+    if (!Message.empty()) {
+        DisplayStatusMessage(Matrix, OffscreenCanvas, Message, 255, 255, 255);
     }
 
     Matrix->SwapOnVSync(OffscreenCanvas);
@@ -181,7 +245,8 @@ int main(int argc, char *argv[]) {
     bool ShowLogo = false;
     bool ShowSemaphore = false;
     unsigned char Red = 0, Green = 0, Blue = 0;
-    
+    std::string Message = "";
+    std::string LogoType = "parqour"; // Default logo type
     FontsPath = argv[1];
     if (FontsPath.back() != '/') {
         FontsPath += "/";
@@ -190,10 +255,10 @@ int main(int argc, char *argv[]) {
     for (int Idx = 2; Idx < argc; ++Idx) {
         if (strcmp(argv[Idx], "-l") == 0) {
             ShowLogo = true;
-        };
-		if (strcmp(argv[Idx], "-a") == 0) {
+        }
+        if (strcmp(argv[Idx], "-a") == 0) {
             ShowIP = true;
-        };
+        }
         if (strcmp(argv[Idx], "-s") == 0) {
             ShowSemaphore = true;
             if (Idx + 1 < argc) {
@@ -205,9 +270,25 @@ int main(int argc, char *argv[]) {
             } else {
                 std::cerr << "Missing color for semaphore mode.\n";
                 return 1;
-            };
-        };
-    };
-    ViewSplashScreen(ShowIP, ShowLogo, ShowSemaphore, Red, Green, Blue);
-    return 0;
-};
+            }
+        }
+        if (strcmp(argv[Idx], "-t") == 0) {
+            if (Idx + 1 < argc) {
+                Message = argv[++Idx];
+            } else {
+                std::cerr << "Missing text for message mode.\n";
+                return 1;
+            }
+        }
+        if (strcmp(argv[Idx], "-logo") == 0) {
+            if (Idx + 1 < argc) {
+                LogoType = argv[++Idx];
+            } else {
+                std::cerr << "Missing logo type.\n";
+                return 1;
+            }
+        }
+    }
+    return ViewSplashScreen(ShowIP, ShowLogo, ShowSemaphore, Red, Green, Blue, Message, LogoType);
+}
+

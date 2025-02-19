@@ -92,16 +92,10 @@ int main(int argc, char *argv[]) {
     RGBMatrix::Options MatrixOptions;
     MatrixOptions.rows = Config.SinglePanelHeight;
     MatrixOptions.cols = Config.SinglePanelWidth * Config.PanelsChainCount;
-    MatrixOptions.chain_length = 1;
     MatrixOptions.pwm_lsb_nanoseconds = Config.PwmLsbNanos;
-    MatrixOptions.led_rgb_sequence = Config.ColorScheme;
-
-    MatrixOptions.multiplexing = 0;
-    MatrixOptions.parallel = 1;
-    MatrixOptions.row_address_type = 0;
-    MatrixOptions.pwm_bits = 1;
+    MatrixOptions.pwm_bits=1;
     MatrixOptions.show_refresh_rate = true;
-    // MatrixOptions.pwm_dither_bits = 2;
+    MatrixOptions.led_rgb_sequence = Config.ColorScheme;
 
     rgb_matrix::RuntimeOptions RuntimeOpt;
 	

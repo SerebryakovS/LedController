@@ -71,9 +71,10 @@ HTTP Server works on port: 13222
 	"show_ip" : true | false 
 }
 ```
-#### POST set_colored_circle
+#### POST set_colored_status
 ```
 {
-	"color" : "FFFFFF"
+	"color" : "FFFFFF",
+	"text" : "123456"
 }
 ```

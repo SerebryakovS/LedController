@@ -41,6 +41,7 @@
             background-color: #007BFF;
             color: white;
         }
+
         .tabcontent {
             display: none;
             padding: 20px;
@@ -61,13 +62,14 @@
             text-align: right;
             padding-right: 20px;
         }
-        input[type=text], input[type=number], input[type=color], input[type=checkbox], button {
+        input[type=text], input[type=number], input[type=color], input[type=checkbox], button, select {
             padding: 10px;
             margin-top: 5px;
             border: 1px solid #ccc;
             box-sizing: border-box;
             width: 100%;
         }
+
         button[type=button] {
             background-color: #00944c;
             color: white;
@@ -107,8 +109,8 @@
             <button class="tablinks" onclick="openTab(event, 'SetScroll')">Scroll</button>
             <button class="tablinks" onclick="openTab(event, 'SetBlink')">Blink</button>
             <button class="tablinks" onclick="openTab(event, 'SplashBoot')">Splash</button>
-            <button class="tablinks" onclick="openTab(event, 'SetCircle')">Circle</button>
-            <button class="tablinks" onclick="openTab(event, 'Config')">Config</button>
+            <button class="tablinks" onclick="openTab(event, 'SetColoredStatus')">Status</button>
+            <button class="tablinks" onclick="openTab(event, 'Config')" style="background-color: #ed5358;">Config</button>
         </div>
 
         <div id="SetText" class="tabcontent">
@@ -197,27 +199,33 @@
             <button type="button" onclick="sendData('/set_splasher')">Send Request</button>
         </div>
 
-        <div id="SetCircle" class="tabcontent">
-            <h2>Set filled signal circle</h2>
+
+        <div id="SetColoredStatus" class="tabcontent">
+            <h2>Set Colored Status</h2>
             <table>
                 <tr>
                     <td>Color:</td>
                     <td>
-                        <input type="hidden" id="circleColor" value="#FFFFFF">
+                        <input type="hidden" id="statusColor" value="#FFFFFF">
                         <div class="color-picker-wrapper">
-                            <button class="color-button" style="background-color: #FF0000;" onclick="setCircleColor('#FF0000')"></button>
-                            <button class="color-button" style="background-color: #00FF00;" onclick="setCircleColor('#00FF00')"></button>
-                            <button class="color-button" style="background-color: #0000FF;" onclick="setCircleColor('#0000FF')"></button>
-                            <button class="color-button" style="background-color: #FFFF00;" onclick="setCircleColor('#FFFF00')"></button>
-                            <button class="color-button" style="background-color: #FF00FF;" onclick="setCircleColor('#FF00FF')"></button>
-                            <button class="color-button" style="background-color: #00FFFF;" onclick="setCircleColor('#00FFFF')"></button>
-                            <button class="color-button" style="background-color: #FFFFFF; border: 1px solid black;" onclick="setCircleColor('#FFFFFF')"></button>
+                            <button class="color-button" style="background-color: #FF0000;" onclick="setStatusColor('#FF0000')"></button>
+                            <button class="color-button" style="background-color: #00FF00;" onclick="setStatusColor('#00FF00')"></button>
+                            <button class="color-button" style="background-color: #0000FF;" onclick="setStatusColor('#0000FF')"></button>
+                            <button class="color-button" style="background-color: #FFFF00;" onclick="setStatusColor('#FFFF00')"></button>
+                            <button class="color-button" style="background-color: #FF00FF;" onclick="setStatusColor('#FF00FF')"></button>
+                            <button class="color-button" style="background-color: #00FFFF;" onclick="setStatusColor('#00FFFF')"></button>
+                            <button class="color-button" style="background-color: #FFFFFF; border: 1px solid black;" onclick="setStatusColor('#FFFFFF')"></button>
                         </div>
                     </td>
                 </tr>
+                <tr>
+                    <td>Text:</td>
+                    <td><input type="text" id="statusText" name="statusText"></td>
+                </tr>
             </table>
-            <button type="button" onclick="sendData('/set_colored_circle')">Send Request</button>
+            <button type="button" onclick="sendData('/set_colored_status')">Send Request</button>
         </div>
+
 
         <div id="Config" class="tabcontent">
             <h2>Update Config</h2>
@@ -246,6 +254,17 @@
                     <td>Fonts Path:</td>
                     <td><input type="text" id="color_scheme" name="color_scheme" value="RGB"></td>
                 </tr>
+
+                <tr>
+                    <td>Select Logo:</td>
+                    <td>
+                        <select id="logo_type">
+                            <option value="parqour">Parqour</option>
+                            <option value="damu">Damu</option>
+                        </select>
+                    </td>
+                </tr>
+
             </table>
             <button type="button" onclick="sendConfigData()">Update Config</button>
         </div>
@@ -258,6 +277,10 @@
 
         function setCircleColor(colorValue) {
             document.getElementById("circleColor").value = colorValue;
+        }
+
+        function setStatusColor(colorValue) {
+            document.getElementById("statusColor").value = colorValue;
         }
 
         function openTab(evt, tabName) {
@@ -312,15 +335,23 @@
                     break;
                 case '/set_splasher':
                     data = {
-                        show_ip: document.getElementById("show_ip").checked
+                        show_ip: document.getElementById("show_ip").checked //,
+                        // logo_type: document.getElementById("logo_type").value
                     };
                     break;
-                case '/set_colored_circle':
-                    var circleColorValue = document.getElementById("circleColor").value;
+                // case '/set_colored_status':
+                //     var circleColorValue = document.getElementById("circleColor").value;
+                //     data = {
+                //         color: circleColorValue
+                //     };
+                //     break;
+                case '/set_colored_status':
                     data = {
-                        color: circleColorValue
+                        color: document.getElementById("statusColor").value,
+                        text: document.getElementById("statusText").value
                     };
                     break;
+
                 default:
                     console.error('Invalid endpoint:', endpoint);
                     return;
@@ -349,7 +380,8 @@
                 panels_chain_count: parseInt(document.getElementById("panels_chain_count").value, 10) || 1,
                 pwm_lsb_nanos: parseInt(document.getElementById("pwm_lsb_nanos").value, 10) || 300,
                 fonts_path: document.getElementById("fonts_path").value || "../fonts/",
-                color_scheme: document.getElementById("color_scheme").value || "RGB"
+                color_scheme: document.getElementById("color_scheme").value || "RGB",
+                selected_logo: document.getElementById("logo_type").value || "parqour"
             };
             console.log("send packet:",data)
 

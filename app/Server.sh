@@ -18,7 +18,8 @@ if [[ ! -f "$CONFIG_PATH" ]]; then
 "PwmLsbNanos": 300,
 "FontsPath": "../fonts/",
 "ColorScheme": "RGB",
-"RestPort": 13222
+"RestPort": 13222,
+"SelectedLogo": "parqour"
 }
 EOL
 fi
@@ -30,6 +31,9 @@ PwmLsbNanos=$(jq ".PwmLsbNanos" "$CONFIG_PATH")
 FontsPath=$(jq -r ".FontsPath" "$CONFIG_PATH")
 ColorScheme=$(jq -r ".ColorScheme" "$CONFIG_PATH")
 REST_PORT=$(jq ".RestPort" "$CONFIG_PATH")
+SelectedLogo=$(jq -r ".SelectedLogo" "$CONFIG_PATH")
+
+echo $SelectedLogo
 
 UpdateConfig() {
     KEY=$1; VALUE=$2;
@@ -206,20 +210,22 @@ APIRequestsHandler() {
 				echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"success\"}"
 			fi
 			;;
-		"/set_splasher")
-			KillProcess Splasher;
-			ShowIP=$(echo "$Body" | jq ".show_ip")
-			Argument="-l"  # Show logo by default
-			if [[ "$ShowIP" == "true" ]]; then
-				Argument="-l -a"
-			fi
-
-			KillStart Controller Splasher "$Argument"
-			echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"success\"}"
-			;;
-        "/set_colored_circle")
+        "/set_splasher")
+            KillProcess Splasher;
+            ShowIP=$(echo "$Body" | jq ".show_ip")
+            LogoType=$(echo "$Body" | jq -r ".logo_type")  # Use -r to remove quotes
+            Argument="-l"
+            if [[ "$ShowIP" == "true" ]]; then
+                Argument="-l -a"
+            fi
+            Argument="$Argument -logo $SelectedLogo"
+            KillStart Controller Splasher "$Argument"
+            echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"success\"}"
+            ;;
+        "/set_colored_status")
             KillProcess Splasher
             ColorHex=$(echo "$Body" | jq -r ".color")
+            Text=$(echo "$Body" | jq -r ".text")
             if [[ ! $ColorHex =~ ^#[0-9A-Fa-f]{6}$ ]]; then
                 echo -ne "HTTP/1.1 400 Bad Request\r\nContent-Type: application/json\r\n\r\n{\"error\": \"Invalid color format. Use #RRGGBB.\"}"
                 return
@@ -227,7 +233,7 @@ APIRequestsHandler() {
             Red=$((16#${ColorHex:1:2}))
             Green=$((16#${ColorHex:3:2}))
             Blue=$((16#${ColorHex:5:2}))
-            KillStart Controller Splasher "-s $Red,$Green,$Blue"
+            KillStart Controller Splasher "-s $Red,$Green,$Blue -t $Text"
             echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"success\"}"
             ;;
         "/set_config")
@@ -239,7 +245,7 @@ APIRequestsHandler() {
             PwmLsbNanos=$(echo "$Body" | jq ".pwm_lsb_nanos // $PwmLsbNanos")
             FontsPath=$(echo "$Body" | jq -r ".fonts_path // \"$FontsPath\"")
             ColorScheme=$(echo "$Body" | jq -r ".color_scheme // \"$ColorScheme\"")
-            # Update the config file
+            SelectedLogo=$(echo "$Body" | jq -r ".selected_logo // \"$SelectedLogo\"")
             cat > "$CONFIG_PATH" <<EOL
 {
     "SinglePanelWidth": $SinglePanelWidth,
@@ -248,11 +254,12 @@ APIRequestsHandler() {
     "PwmLsbNanos": $PwmLsbNanos,
     "FontsPath": "$FontsPath",
     "ColorScheme": "$ColorScheme",
-    "RestPort": $REST_PORT
+    "RestPort": $REST_PORT,
+    "SelectedLogo" : "$SelectedLogo"
 }
 EOL
             echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"config_updated\"}"
-            eval "$(dirname "$SCRIPT_PATH")/Splasher" $FontsPath -l -a &
+            eval "$(dirname "$SCRIPT_PATH")/Splasher" $FontsPath -l -logo $SelectedLogo -a &
             ;;
         *)
             echo -ne "HTTP/1.1 404 Not Found\r\nContent-Type: application/json\r\n\r\n{\"status\": \"error\", \"message\": \"Endpoint not found\"}"
@@ -266,7 +273,7 @@ Main() {
         return 1
     fi
     sleep 5
-    eval "$(dirname "$SCRIPT_PATH")/Splasher" $FONTS_PATH -l -a &
+    eval "$(dirname "$SCRIPT_PATH")/Splasher" $FONTS_PATH -l -logo $SelectedLogo -a &
     RunHTTPServer
 }
 
@@ -276,7 +283,4 @@ if [ $# -eq 0 ]; then
 elif [ $1 = "APIRequestsHandler" ]; then
     APIRequestsHandler $2
 fi
-
-
-
 
