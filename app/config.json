@@ -1,10 +1,10 @@
 {
     "SinglePanelWidth": 64,
     "SinglePanelHeight": 64,
-    "PanelsChainCount": 2,
-    "PwmLsbNanos": 200,
+    "PanelsChainCount": 1,
+    "PwmLsbNanos": 300,
     "FontsPath": "../fonts/",
     "ColorScheme": "RGB",
     "RestPort": 13222,
-    "SelectedLogo" : "parqour"
+    "SelectedLogo" : "damu"
 }

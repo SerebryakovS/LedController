@@ -28,12 +28,12 @@ void FillScreenWithColor(RGBMatrix *Matrix, FrameCanvas *OffscreenCanvas, unsign
 
 void DisplayStatusMessage(RGBMatrix *Matrix, FrameCanvas *OffscreenCanvas, const std::string &Message, unsigned char TextRed, unsigned char TextGreen, unsigned char TextBlue) {
     rgb_matrix::Font Font;
-    if (!Font.LoadFont((FontsPath + "8x13.bdf").c_str())) {
+    if (!Font.LoadFont((FontsPath + "7x13.bdf").c_str())) {
         std::cerr << "[ERR]: Could not load font.\n";
         return;
     }
     int FooterHeight = 20;
-    int TextLength = 8 * Message.length();
+    int TextLength = 7 * Message.length();
     int XOffset = (Matrix->width() - TextLength) / 2;
     int YOffset = Matrix->height() - 6;
 
