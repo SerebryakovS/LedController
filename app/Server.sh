@@ -33,8 +33,6 @@ ColorScheme=$(jq -r ".ColorScheme" "$CONFIG_PATH")
 REST_PORT=$(jq ".RestPort" "$CONFIG_PATH")
 SelectedLogo=$(jq -r ".SelectedLogo" "$CONFIG_PATH")
 
-echo $SelectedLogo
-
 UpdateConfig() {
     KEY=$1; VALUE=$2;
     jq --argjson val "$VALUE" ".$KEY = \$val" "$CONFIG_PATH" > tmp.$$.json && mv tmp.$$.json "$CONFIG_PATH"

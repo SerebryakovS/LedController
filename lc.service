@@ -5,6 +5,7 @@ After=network.target
 [Service]
 User=root
 Group=root
+WorkingDirectory=<PATH_TO_SERVER_SH>
 ExecStart=<PATH_TO_SERVER_SH>/Server.sh
 Restart=always
 
