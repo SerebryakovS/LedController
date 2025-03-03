@@ -277,6 +277,44 @@ private:
   int parallel_;
 };
 
+class GridMapper : public PixelMapper {
+public:
+  GridMapper() : panels_x_(3), panels_y_(2), panel_width_(64), panel_height_(64) {}
+
+  virtual const char *GetName() const { return "GridMapper"; }
+
+  virtual bool SetParameters(int chain, int parallel, const char *param) {
+    // Можно сделать параметризацию, если хочешь гибкость
+    return true; // пока фиксировано 2x3
+  }
+
+  virtual bool GetSizeMapping(int matrix_width, int matrix_height,
+                              int *visible_width, int *visible_height) const {
+    *visible_width = panels_x_ * panel_width_;
+    *visible_height = panels_y_ * panel_height_;
+    return true;
+  }
+
+  virtual void MapVisibleToMatrix(int matrix_width, int matrix_height,
+                                  int x, int y,
+                                  int *matrix_x, int *matrix_y) const {
+    int panel_x = x / panel_width_;
+    int panel_y = y / panel_height_;
+    int within_x = x % panel_width_;
+    int within_y = y % panel_height_;
+
+    int chain_index = panel_y * panels_x_ + panel_x;
+    *matrix_x = within_x + chain_index * panel_width_;
+    *matrix_y = within_y;
+  }
+
+private:
+  int panels_x_;     // количество панелей по горизонтали (3)
+  int panels_y_;     // количество панелей по вертикали (2)
+  int panel_width_;  // ширина одной панели
+  int panel_height_; // высота одной панели
+};
+
 
 typedef std::map<std::string, PixelMapper*> MapperByName;
 static void RegisterPixelMapperInternal(MapperByName *registry,
@@ -296,6 +334,7 @@ static MapperByName *CreateMapperMap() {
   RegisterPixelMapperInternal(result, new UArrangementMapper());
   RegisterPixelMapperInternal(result, new VerticalMapper());
   RegisterPixelMapperInternal(result, new MirrorPixelMapper());
+  RegisterPixelMapperInternal(result, new GridMapper());
   return result;
 }
 

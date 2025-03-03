@@ -18,6 +18,61 @@ std::string FontsPath;
 
 using namespace rgb_matrix;
 
+void DrawBorder(RGBMatrix *Matrix, FrameCanvas *OffscreenCanvas, int Thickness, unsigned char Red, unsigned char Green, unsigned char Blue) {
+    int width = Matrix->width();
+    int height = Matrix->height();
+
+    // Верхняя и нижняя границы
+    for (int y = 0; y < Thickness; ++y) {
+        for (int x = 0; x < width; ++x) {
+            OffscreenCanvas->SetPixel(x, y, Red, Green, Blue);                         // Верхняя граница
+            OffscreenCanvas->SetPixel(x, height - 1 - y, Red, Green, Blue);           // Нижняя граница
+        }
+    }
+
+    // Левая и правая границы
+    for (int x = 0; x < Thickness; ++x) {
+        for (int y = 0; y < height; ++y) {
+            OffscreenCanvas->SetPixel(x, y, Red, Green, Blue);                        // Левая граница
+            OffscreenCanvas->SetPixel(width - 1 - x, y, Red, Green, Blue);           // Правая граница
+        }
+    }
+}
+
+
+
+
+void FillScreenWithColor(RGBMatrix *Matrix, FrameCanvas *OffscreenCanvas, unsigned char Red, unsigned char Green, unsigned char Blue) {
+    for (int y = 0; y < Matrix->height(); y++) {
+        for (int x = 0; x < Matrix->width(); x++) {
+            OffscreenCanvas->SetPixel(x, y, Red, Green, Blue);
+        }
+    }
+}
+
+void DisplayStatusMessage(RGBMatrix *Matrix, FrameCanvas *OffscreenCanvas, const std::string &Message, unsigned char TextRed, unsigned char TextGreen, unsigned char TextBlue) {
+    rgb_matrix::Font Font;
+    if (!Font.LoadFont((FontsPath + "8x13.bdf").c_str())) {
+        std::cerr << "[ERR]: Could not load font.\n";
+        return;
+    }
+    int FooterHeight = 20;
+    int TextLength = 8 * Message.length();
+    int XOffset = (Matrix->width() - TextLength) / 2;
+    int YOffset = Matrix->height() - 6;
+
+    // Draw black footer
+    for (int y = Matrix->height() - FooterHeight; y < Matrix->height(); y++) {
+        for (int x = 0; x < Matrix->width(); x++) {
+            OffscreenCanvas->SetPixel(x, y, 0, 0, 0);
+        }
+    }
+    printf("_______________%s\n",Message.c_str());
+
+    Color TextColor(255, 255, 255);
+    rgb_matrix::DrawText(OffscreenCanvas, Font, XOffset, YOffset, TextColor, nullptr, Message.c_str(), 0);
+}
+
 std::string GetIpAddress() {
     struct ifaddrs *InterfaceAddressList, *CurrentInterface;
     std::string IpAddress;
@@ -122,8 +177,103 @@ void DrawCircleCenter(RGBMatrix *Matrix, FrameCanvas *OffscreenCanvas, int radiu
     }
 }
 
-int ViewSplashScreen(bool ShowIP, bool ShowLogo, bool ShowSemaphore, unsigned char Red, unsigned char Green, unsigned char Blue) {
-    // Load configuration
+// int ViewSplashScreen(bool ShowIP, bool ShowLogo, bool ShowSemaphore, unsigned char Red, unsigned char Green, unsigned char Blue) {
+//     // Load configuration
+//     if (LoadConfig() != EXIT_SUCCESS) {
+//         fprintf(stderr, "[ERR]: Could not load config. Exiting.\n");
+//         return 1;
+//     };
+//
+//     RGBMatrix::Options MatrixOptions;
+//     MatrixOptions.rows = Config.SinglePanelHeight;
+//     MatrixOptions.cols = Config.SinglePanelWidth * Config.PanelsChainCount;
+//     MatrixOptions.chain_length = 1;
+//     MatrixOptions.pwm_lsb_nanoseconds = Config.PwmLsbNanos;
+//     MatrixOptions.pwm_bits=1;
+//     MatrixOptions.show_refresh_rate = true;
+//     MatrixOptions.led_rgb_sequence = Config.ColorScheme;
+//
+//     rgb_matrix::RuntimeOptions RuntimeOpt;
+//     RGBMatrix *Matrix = RGBMatrix::CreateFromOptions(MatrixOptions, RuntimeOpt);
+//     if (Matrix == NULL) {
+//         std::cerr << "Could not create matrix object.\n";
+//         return 1;
+//     }
+//
+//     signal(SIGTERM, InterruptHandler);
+//     signal(SIGINT, InterruptHandler);
+//
+//     FrameCanvas *OffscreenCanvas = Matrix->CreateFrameCanvas();
+//
+//     if (ShowFillMode) {
+//         FillScreenWithColor(Matrix, OffscreenCanvas, FillRed, FillGreen, FillBlue);
+//         DisplayStatusMessage(Matrix, OffscreenCanvas, Message, TextRed, TextGreen, TextBlue);
+//     }
+//
+//     if (ShowLogo) {
+//         if (!DisplayLogoPatternCenter(Matrix, &MatrixOptions, OffscreenCanvas)) {
+//             std::cerr << "Displaying image failed.\n";
+//             delete Matrix;
+//             return -EXIT_FAILURE;
+//         }
+//     }
+//     if (ShowIP) {
+//         std::string IpAddress = GetIpAddress();
+//         if (!IpAddress.empty()) {
+//             DrawIPAddress(Matrix, &MatrixOptions, IpAddress, OffscreenCanvas);
+//         }
+//     }
+//     if (ShowSemaphore) {
+//         DrawCircleCenter(Matrix, OffscreenCanvas, 20, Red, Green, Blue);
+//     }
+//
+//     Matrix->SwapOnVSync(OffscreenCanvas);
+//     while (!InterruptReceived) {
+//         sleep(1);
+//     }
+//     std::cout << "Exiting splash viewer\n";
+//     delete Matrix;
+//     return 0;
+// }
+
+// int main(int argc, char *argv[]) {
+//     bool ShowIP = false;
+//     bool ShowLogo = false;
+//     bool ShowSemaphore = false;
+//     unsigned char Red = 0, Green = 0, Blue = 0;
+//
+//     FontsPath = argv[1];
+//     if (FontsPath.back() != '/') {
+//         FontsPath += "/";
+//     }
+//
+//     for (int Idx = 2; Idx < argc; ++Idx) {
+//         if (strcmp(argv[Idx], "-l") == 0) {
+//             ShowLogo = true;
+//         };
+// 		if (strcmp(argv[Idx], "-a") == 0) {
+//             ShowIP = true;
+//         };
+//         if (strcmp(argv[Idx], "-s") == 0) {
+//             ShowSemaphore = true;
+//             if (Idx + 1 < argc) {
+//                 std::string ColorStr = argv[++Idx];
+//                 if (sscanf(ColorStr.c_str(), "%hhu,%hhu,%hhu", &Red, &Green, &Blue) != 3) {
+//                     std::cerr << "Invalid color format. Use R,G,B format.\n";
+//                     return 1;
+//                 }
+//             } else {
+//                 std::cerr << "Missing color for semaphore mode.\n";
+//                 return 1;
+//             };
+//         };
+//     };
+//     ViewSplashScreen(ShowIP, ShowLogo, ShowSemaphore, Red, Green, Blue);
+//     return 0;
+// };
+
+int ViewSplashScreen(bool ShowFillMode, unsigned char FillRed, unsigned char FillGreen, unsigned char FillBlue, const std::string &Message, unsigned char TextRed, unsigned char TextGreen, unsigned char TextBlue) {
+
     if (LoadConfig() != EXIT_SUCCESS) {
         fprintf(stderr, "[ERR]: Could not load config. Exiting.\n");
         return 1;
@@ -132,15 +282,15 @@ int ViewSplashScreen(bool ShowIP, bool ShowLogo, bool ShowSemaphore, unsigned ch
     RGBMatrix::Options MatrixOptions;
     MatrixOptions.rows = Config.SinglePanelHeight;
     MatrixOptions.cols = Config.SinglePanelWidth * Config.PanelsChainCount;
-    MatrixOptions.chain_length = 1;
     MatrixOptions.pwm_lsb_nanoseconds = Config.PwmLsbNanos;
     MatrixOptions.pwm_bits=1;
     MatrixOptions.show_refresh_rate = true;
     MatrixOptions.led_rgb_sequence = Config.ColorScheme;
+    MatrixOptions.pixel_mapper_config = "GridMapper";
 
     rgb_matrix::RuntimeOptions RuntimeOpt;
     RGBMatrix *Matrix = RGBMatrix::CreateFromOptions(MatrixOptions, RuntimeOpt);
-    if (Matrix == NULL) {
+    if (Matrix == nullptr) {
         std::cerr << "Could not create matrix object.\n";
         return 1;
     }
@@ -150,64 +300,66 @@ int ViewSplashScreen(bool ShowIP, bool ShowLogo, bool ShowSemaphore, unsigned ch
 
     FrameCanvas *OffscreenCanvas = Matrix->CreateFrameCanvas();
 
-    if (ShowLogo) {
-        if (!DisplayLogoPatternCenter(Matrix, &MatrixOptions, OffscreenCanvas)) {
-            std::cerr << "Displaying image failed.\n";
-            delete Matrix;
-            return -EXIT_FAILURE;
-        }
+    if (ShowFillMode) {
+        // FillScreenWithColor(Matrix, OffscreenCanvas, FillRed, FillGreen, FillBlue);
+        // DisplayStatusMessage(Matrix, OffscreenCanvas, "6KZ143ABA", TextRed, TextGreen, TextBlue);
     }
-    if (ShowIP) {
-        std::string IpAddress = GetIpAddress();
-        if (!IpAddress.empty()) {
-            DrawIPAddress(Matrix, &MatrixOptions, IpAddress, OffscreenCanvas);
-        }
-    }
-    if (ShowSemaphore) {
-        DrawCircleCenter(Matrix, OffscreenCanvas, 20, Red, Green, Blue);
-    }
+
+
+    DrawBorder(Matrix, OffscreenCanvas, 3, 255, 0, 0);
 
     Matrix->SwapOnVSync(OffscreenCanvas);
     while (!InterruptReceived) {
         sleep(1);
     }
-    std::cout << "Exiting splash viewer\n";
+
     delete Matrix;
     return 0;
 }
 
 int main(int argc, char *argv[]) {
-    bool ShowIP = false;
-    bool ShowLogo = false;
-    bool ShowSemaphore = false;
-    unsigned char Red = 0, Green = 0, Blue = 0;
-    
+    bool ShowFillMode = false;
+    unsigned char FillRed = 0, FillGreen = 0, FillBlue = 0;
+    std::string Message = "";
+    unsigned char TextRed = 255, TextGreen = 255, TextBlue = 255;
+
     FontsPath = argv[1];
     if (FontsPath.back() != '/') {
         FontsPath += "/";
     }
 
     for (int Idx = 2; Idx < argc; ++Idx) {
-        if (strcmp(argv[Idx], "-l") == 0) {
-            ShowLogo = true;
-        };
-		if (strcmp(argv[Idx], "-a") == 0) {
-            ShowIP = true;
-        };
-        if (strcmp(argv[Idx], "-s") == 0) {
-            ShowSemaphore = true;
-            if (Idx + 1 < argc) {
-                std::string ColorStr = argv[++Idx];
-                if (sscanf(ColorStr.c_str(), "%hhu,%hhu,%hhu", &Red, &Green, &Blue) != 3) {
-                    std::cerr << "Invalid color format. Use R,G,B format.\n";
-                    return 1;
-                }
+        if (strcmp(argv[Idx], "-f") == 0) {
+            ShowFillMode = true;
+            if (Idx + 3 < argc) {
+                FillRed = static_cast<unsigned char>(atoi(argv[++Idx]));
+                FillGreen = static_cast<unsigned char>(atoi(argv[++Idx]));
+                FillBlue = static_cast<unsigned char>(atoi(argv[++Idx]));
             } else {
-                std::cerr << "Missing color for semaphore mode.\n";
+                std::cerr << "Missing color parameters for fill mode.\n";
                 return 1;
-            };
-        };
-    };
-    ViewSplashScreen(ShowIP, ShowLogo, ShowSemaphore, Red, Green, Blue);
-    return 0;
-};
+            }
+        }
+        if (strcmp(argv[Idx], "-m") == 0) {
+            if (Idx + 1 < argc) {
+                Message = argv[++Idx];
+            } else {
+                std::cerr << "Missing message parameter.\n";
+                return 1;
+            }
+        }
+        if (strcmp(argv[Idx], "-t") == 0) {
+            if (Idx + 3 < argc) {
+                TextRed = static_cast<unsigned char>(atoi(argv[++Idx]));
+                TextGreen = static_cast<unsigned char>(atoi(argv[++Idx]));
+                TextBlue = static_cast<unsigned char>(atoi(argv[++Idx]));
+            } else {
+                std::cerr << "Missing text color parameters.\n";
+                return 1;
+            }
+        }
+    }
+
+    return ViewSplashScreen(ShowFillMode, FillRed, FillGreen, FillBlue, Message, TextRed, TextGreen, TextBlue);
+}
+
