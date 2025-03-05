@@ -77,3 +77,8 @@ HTTP Server works on port: 13222
 	"color" : "FFFFFF"
 }
 ```
+
+How to generate new font:
+```
+otf2bdf -p 30 -r 70 -o font-16px.bdf /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf
+```
