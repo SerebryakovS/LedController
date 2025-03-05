@@ -76,7 +76,7 @@ std::string ReadFromPipe(int PipeFd) {
 void DrawTextSegment(FrameCanvas *Canvas, rgb_matrix::Font &Font, 
                      int XOffset, const std::string &Text, Color &_Color, 
                      int LetterSpacing, int YPosition) {
-    rgb_matrix::DrawText(Canvas, Font, XOffset, YPosition + Font.baseline(), 
+    rgb_matrix::DrawText(Canvas, Font, XOffset, YPosition + Font.baseline(),
                          _Color, NULL, Text.c_str(), LetterSpacing);
 }
 
@@ -101,6 +101,10 @@ int main(int argc, char *argv[]) {
     MatrixOptions.row_address_type = 0;
     MatrixOptions.pwm_bits = 1;
     MatrixOptions.show_refresh_rate = true;
+
+    MatrixOptions.pixel_mapper_config = "GridMapper";
+
+
     // MatrixOptions.pwm_dither_bits = 2;
 
     rgb_matrix::RuntimeOptions RuntimeOpt;
@@ -113,9 +117,13 @@ int main(int argc, char *argv[]) {
     Color BackgroundColor(0, 0, 0);
     int LetterSpacing = 0;
     int IncomingCommandsPipe = OpenNonBlockingPipe(COMMANDS_PIPE);
-    rgb_matrix::Font AFont; AFont.LoadFont((FontsPath + "8x13.bdf").c_str());
-    rgb_matrix::Font BFont; BFont.LoadFont((FontsPath + "7x13.bdf").c_str());
-    rgb_matrix::Font CFont; CFont.LoadFont((FontsPath + "6x13.bdf").c_str());
+
+
+
+    rgb_matrix::Font CFont; CFont.LoadFont((FontsPath + "font-16px.bdf").c_str());
+    // rgb_matrix::Font AFont; AFont.LoadFont((FontsPath + "8x13.bdf").c_str());
+    // rgb_matrix::Font BFont; BFont.LoadFont((FontsPath + "7x13.bdf").c_str());
+    // rgb_matrix::Font CFont; CFont.LoadFont((FontsPath + "6x13.bdf").c_str());
     rgb_matrix::Font *SetFont;
 	
     RGBMatrix *Canvas = RGBMatrix::CreateFromOptions(MatrixOptions, RuntimeOpt);
@@ -129,6 +137,8 @@ int main(int argc, char *argv[]) {
 
     FrameCanvas *OffscreenCanvas = Canvas->CreateFrameCanvas();
 
+
+
     std::vector<std::string> LineTexts = {"", "", "", ""};
     std::vector<Color> Colors = {
         Color(255, 255, 255),
@@ -138,7 +148,7 @@ int main(int argc, char *argv[]) {
     };
     std::vector<BlinkState> BlinkStates(4);
     std::vector<ScrollState> ScrollStates(4);
-    int XOffset = 2;
+    int XOffset = 5;
 
     while (!InterruptReceived) {
         OffscreenCanvas->Fill(BackgroundColor.r, BackgroundColor.g, BackgroundColor.b);
@@ -211,7 +221,13 @@ int main(int argc, char *argv[]) {
                     }
                 }
             }
-            int YPosition = 2 + 15 * Idx;
+
+            int LineHeight = CFont.height();
+            int YSpacing = 0;
+            int YPosition = (LineHeight + YSpacing) * Idx;
+
+
+
             SetFont = &CFont;
 			if (ScrollStates[Idx].IsScrolling) {
 				int TextOffsetLimit = utf8_strlen(LineTexts[Idx]) * 6;
@@ -221,7 +237,6 @@ int main(int argc, char *argv[]) {
 					ScrollStates[Idx].CurrentOffset -= ScrollStates[Idx].ScrollSpeed;
 					if (ScrollStates[Idx].CurrentOffset < -TextOffsetLimit) {
 						ScrollStates[Idx].CurrentOffset = MatrixOptions.cols;
-						printf("HERE\n");
 					};
 					ScrollStates[Idx].LastScrollTime = Now;
 				};
