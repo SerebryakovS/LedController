@@ -226,8 +226,6 @@ int main(int argc, char *argv[]) {
             int YSpacing = 0;
             int YPosition = (LineHeight + YSpacing) * Idx;
 
-
-
             SetFont = &CFont;
 			if (ScrollStates[Idx].IsScrolling) {
 				int TextOffsetLimit = utf8_strlen(LineTexts[Idx]) * 6;

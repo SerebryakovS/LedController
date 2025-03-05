@@ -2,9 +2,8 @@
     "SinglePanelWidth": 64,
     "SinglePanelHeight": 64,
     "PanelsChainCount": 6,
-    "PwmLsbNanos": 200,
+    "PwmLsbNanos": 300,
     "FontsPath": "../fonts/",
-    "ColorScheme": "BRG",
-    "RestPort": 13222,
-    "SelectedLogo": "parqour"
+    "ColorScheme": "RGB",
+    "RestPort": 13222
 }
