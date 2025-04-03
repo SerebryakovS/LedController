@@ -163,7 +163,7 @@ gpio_bits_t GPIO::InitOutputs(gpio_bits_t outputs,
 	}
 	hub75_bank.size = 14;
 
-  gpio_bank_set_output(&hub75_bank);  
+  gpio_bank_set_output(&hub75_bank);
 
   // Epic Hack: get the memory address to the uint32_t that controls PORTA on Allwinner H3
   // directly modify the bits here to control the GPIO output.

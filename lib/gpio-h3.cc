@@ -85,6 +85,7 @@ int gpio_set_output(struct gpio_t* p)
 }
 
 
+// 2 version
 int gpio_set_output_value(struct gpio_t* p) {
 	*p->dat_ptr |= (1 << p->idx);
     // __sync_synchronize();
@@ -96,6 +97,8 @@ int gpio_reset_output_value(struct gpio_t* p) {
     return 0;
 };
 
+
+// 1 version
 // int gpio_set_output_value(struct gpio_t* p, const uint32_t v) {
 //     if (!(v == 1 || v == 0)) {
 //         FATAL_ERRORF("v is not valid %d", v);
