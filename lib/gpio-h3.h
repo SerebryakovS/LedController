@@ -48,3 +48,6 @@ int gpio_bank_set_output_value(struct gpio_bank_t* pbank, const uint32_t v);
 
 int gpio_bank_read(struct gpio_bank_t* pbank);
 
+extern uint32_t cached_gpio_pa;
+extern uint32_t cached_gpio_pc;
+extern uint32_t cached_gpio_pg;

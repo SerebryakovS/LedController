@@ -23,6 +23,12 @@
 
 extern struct gpio_t      hub75_gpio[14];
 
+
+uint32_t mask_to_gpio(gpio_bits_t logic_mask);
+gpio_bits_t pa_mask();
+gpio_bits_t pc_mask();
+gpio_bits_t pg_mask();
+
 // Putting this in our namespace to not collide with other things called like
 // this.
 namespace rgb_matrix {
@@ -54,30 +60,74 @@ public:
   gpio_bits_t RequestInputs(gpio_bits_t inputs);
 
   // Set the bits that are '1' in the output. Leave the rest untouched.
+  // inline void SetBits(gpio_bits_t value) {
+  //   if (!value) return;
+  //   WriteSetBits(value);
+  //   for (int i = 0; i < slowdown_; ++i) {
+  //     WriteSetBits(value);
+  //   }
+  // }
   inline void SetBits(gpio_bits_t value) {
-    if (!value) return;
-    WriteSetBits(value);
-    for (int i = 0; i < slowdown_; ++i) {
-      WriteSetBits(value);
-    }
+    WriteMaskedBits(value, value);
   }
 
   // Clear the bits that are '1' in the output. Leave the rest untouched.
+  // inline void ClearBits(gpio_bits_t value) {
+  //   if (!value) return;
+  //   WriteClrBits(value);
+  //   for (int i = 0; i < slowdown_; ++i) {
+  //     WriteClrBits(value);
+  //   }
+  // }
   inline void ClearBits(gpio_bits_t value) {
-    if (!value) return;
-    WriteClrBits(value);
-    for (int i = 0; i < slowdown_; ++i) {
-      WriteClrBits(value);
-    }
+    WriteMaskedBits(0, value);
   }
 
   // Write all the bits of "value" mentioned in "mask". Leave the rest untouched.
-  inline void WriteMaskedBits(gpio_bits_t value, gpio_bits_t mask) {
-    // Writing a word is two operations. The IO is actually pretty slow, so
-    // this should probably  be unnoticable.
-    ClearBits(~value & mask);
-    SetBits(value & mask);
+  // inline void WriteMaskedBits(gpio_bits_t value, gpio_bits_t mask) {
+  //   // Writing a word is two operations. The IO is actually pretty slow, so
+  //   // this should probably  be unnoticable.
+  //   ClearBits(~value & mask);
+  //   SetBits(value & mask);
+  // }
+inline void WriteMaskedBits(gpio_bits_t value, gpio_bits_t mask) {
+  uint32_t pa_set = 0, pc_set = 0, pg_set = 0;
+  uint32_t pa_clr = 0, pc_clr = 0, pg_clr = 0;
+
+  for (int i = 0; i < 14; ++i) {
+    if (!(mask & (1 << i))) continue;
+    gpio_t* g = &hub75_gpio[i];
+    uint32_t bit = (1 << g->idx);
+
+    if (value & (1 << i)) {
+      if (g->base_off == 0) pa_set |= bit;
+      else if (g->base_off == 2) pc_set |= bit;
+      else if (g->base_off == 6) pg_set |= bit;
+    } else {
+      if (g->base_off == 0) pa_clr |= bit;
+      else if (g->base_off == 2) pc_clr |= bit;
+      else if (g->base_off == 6) pg_clr |= bit;
+    }
   }
+
+  if (hub75_gpio[0].dat_ptr) { // PG
+    cached_gpio_pg &= ~pg_clr;
+    cached_gpio_pg |= pg_set;
+    *hub75_gpio[0].dat_ptr = cached_gpio_pg;
+  }
+  if (hub75_gpio[1].dat_ptr) { // PC
+    cached_gpio_pc &= ~pc_clr;
+    cached_gpio_pc |= pc_set;
+    *hub75_gpio[1].dat_ptr = cached_gpio_pc;
+  }
+  if (hub75_gpio[2].dat_ptr) { // PA
+    cached_gpio_pa &= ~pa_clr;
+    cached_gpio_pa |= pa_set;
+    *hub75_gpio[2].dat_ptr = cached_gpio_pa;
+  }
+}
+
+
 
   inline gpio_bits_t Read() const { return ReadRegisters() & input_bits_; }
 
@@ -87,20 +137,22 @@ private:
   }
 
   inline void WriteSetBits(gpio_bits_t value) {
-    for (size_t i = 0; i < 14; ++i) {
-        if (value & (1 << i)) {
-            gpio_set_output_value(&hub75_gpio[i]);
-        }
-    }
+  //   for (size_t i = 0; i < 14; ++i) {
+  //       if (value & (1 << i)) {
+  //           gpio_set_output_value(&hub75_gpio[i]);
+  //       }
+  //   }
+  }
+  //
+  inline void WriteClrBits(gpio_bits_t value) {
+  //   for (size_t i = 0; i < 14; ++i) {
+  //       if (value & (1 << i)) {
+  //           gpio_reset_output_value(&hub75_gpio[i]);
+  //       }
+  //   }
   }
 
-  inline void WriteClrBits(gpio_bits_t value) {
-    for (size_t i = 0; i < 14; ++i) {
-        if (value & (1 << i)) {
-            gpio_reset_output_value(&hub75_gpio[i]);
-        }
-    }
-  }
+
 
 private:
   gpio_bits_t output_bits_;

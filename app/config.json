@@ -1,8 +1,8 @@
 {
     "SinglePanelWidth": 64,
     "SinglePanelHeight": 64,
-    "PanelsChainCount": 1,
-    "PwmLsbNanos": 200,
+    "PanelsChainCount": 2,
+    "PwmLsbNanos": 400,
     "FontsPath": "../fonts/",
     "ColorScheme": "RGB",
     "RestPort": 13222,

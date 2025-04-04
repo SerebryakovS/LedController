@@ -8,6 +8,11 @@ static const size_t GPIO_REG_LEN=0x2E2400;
 
 static uint32_t*   p_gpio=NULL;
 
+
+uint32_t cached_gpio_pa = 0;
+uint32_t cached_gpio_pc = 0;
+uint32_t cached_gpio_pg = 0;
+
 uint32_t* gpio_system_init(void)
 {
 	if ( NULL == p_gpio ) {
@@ -50,8 +55,8 @@ int gpio_init(struct gpio_t* p, const char * name)
 	p->reg_clear_mask =  ~( 0xF << ( p->reg_idx * 4 )) ;
 	p->data_clear_mask = ~( 1 << (p->idx));
 	p->val = 0xffffffff;
-	DBG_MSG("bank = %c, idx = %d, base_off= %d, reg_off = %d, reg_idx = %d, reg=0x%x, clear_mask = 0x%x, data_clear_mask = 0x%x", bank, p->idx, 
-			p->base_off, p->reg_off, p->reg_idx, *(p->reg_ptr), p->reg_clear_mask, p->data_clear_mask);
+	DBG_MSG("bank = %c, idx = %d, base_off= %d, reg_off = %d, reg_idx = %d, reg=0x%x, clear_mask = 0x%x, data_clear_mask = 0x%x, dat_ptr = 0x%x", bank, p->idx,
+			p->base_off, p->reg_off, p->reg_idx, *(p->reg_ptr), p->reg_clear_mask, p->data_clear_mask, p->dat_ptr);
 	return 0;
 }
 

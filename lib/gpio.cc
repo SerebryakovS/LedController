@@ -123,6 +123,36 @@ static volatile uint32_t *s_Timer1Mhz = NULL;
 //static volatile uint32_t *s_PWM_registers = NULL;
 //static volatile uint32_t *s_CLK_registers = NULL;
 
+uint32_t mask_to_gpio(gpio_bits_t logic_mask) {
+  uint32_t phys = 0;
+  for (int i = 0; i < 14; ++i) {
+    if (logic_mask & (1 << i)) {
+      struct gpio_t* g = &hub75_gpio[i];
+      phys |= (1 << g->idx);
+    }
+  }
+  return phys;
+}
+
+gpio_bits_t pa_mask() {
+  gpio_bits_t mask = 0;
+  for (int i = 0; i < 14; ++i)
+    if (hub75_gpio[i].base_off == 0) mask |= (1 << i);
+  return mask;
+}
+gpio_bits_t pc_mask() {
+  gpio_bits_t mask = 0;
+  for (int i = 0; i < 14; ++i)
+    if (hub75_gpio[i].base_off == 2) mask |= (1 << i);
+  return mask;
+}
+gpio_bits_t pg_mask() {
+  gpio_bits_t mask = 0;
+  for (int i = 0; i < 14; ++i)
+    if (hub75_gpio[i].base_off == 6) mask |= (1 << i);
+  return mask;
+}
+
 
 namespace rgb_matrix {
 #define GPIO_BIT(x) (1ull << x)
