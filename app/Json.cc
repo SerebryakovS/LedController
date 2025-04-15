@@ -18,17 +18,21 @@ int ParseSetLineTextRequest(const char* JsonString, SetLineTextRequest* Request)
     const cJSON *LineNumber = cJSON_GetObjectItemCaseSensitive(JsonToParse, "line_num");
     const cJSON *LineText = cJSON_GetObjectItemCaseSensitive(JsonToParse, "text");
     const cJSON *LineColor = cJSON_GetObjectItemCaseSensitive(JsonToParse, "color");
-    if (!cJSON_IsNumber(LineNumber) || !cJSON_IsString(LineText) || !cJSON_IsString(LineColor)) {
+    const cJSON *LineFont = cJSON_GetObjectItemCaseSensitive(JsonToParse, "font");
+    const cJSON *LineCenter = cJSON_GetObjectItemCaseSensitive(JsonToParse, "center");
+    if (!cJSON_IsNumber(LineNumber) || !cJSON_IsString(LineText) || !cJSON_IsString(LineColor) || !cJSON_IsString(LineFont)) {
         cJSON_Delete(JsonToParse);
         return false; 
     };
     Request->LineNumber = LineNumber->valueint;
     strncpy(Request->LineText, LineText->valuestring, sizeof(Request->LineText)-1);
+    strncpy(Request->LineFont, LineFont->valuestring, sizeof(Request->LineFont)-1);
 	HexToRgb(LineColor->valuestring, 
 		&Request->LineColor.r,
 		&Request->LineColor.g,
 		&Request->LineColor.b
 	);
+    Request->Centered = cJSON_IsTrue(LineCenter);
     cJSON_Delete(JsonToParse);
     return true;
 };

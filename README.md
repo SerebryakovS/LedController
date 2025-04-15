@@ -33,10 +33,21 @@ HTTP Server works on port: 13222
 #### POST set_line_text
 ```
 {
-	"line_num" : 1, // available lines: (1,2,3)
-	"text" : "123456", // color hex value
-	"color" : "FFFFFF" // used colors: (FF0000, 00FF00, 0000FF, FFFF00, FF00FF, 00FFFF)
+  "line_num": 1,             // Номер строки (1-3)
+  "text": "Hello!",          // Текст для отображения
+  "color": "FF0000",         // Цвет текста (HEX, 6 символов)
+  "font": "huge"             // [Опц.] Размер шрифта: tiny | medium | huge (по умолчанию: huge)
 }
+```
+Supported colors:
+```
+"FF0000" — красный
+"00FF00" — зеленый
+"0000FF" — синий
+"FFFF00" — желтый
+"FF00FF" — фиолетовый
+"00FFFF" — голубой
+"FFFFFF" — белый
 ```
 #### POST set_all_lines
 ```
@@ -68,7 +79,9 @@ HTTP Server works on port: 13222
 #### POST set_splasher
 ```
 {
-	"show_ip" : true | false 
+	"show_ip" : true | false,
+	"logo_type" : 
+	
 }
 ```
 #### POST set_colored_status

@@ -17,6 +17,8 @@ using namespace rgb_matrix;
 typedef struct {
 	int  LineNumber;
 	char LineText[64];
+	char LineFont[64];
+	bool Centered;
 	struct Color LineColor;
 } SetLineTextRequest;
 

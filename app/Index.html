@@ -125,6 +125,22 @@
                     <td><input type="text" id="text" name="text"></td>
                 </tr>
                 <tr>
+                    <td>Font:</td>
+                    <td>
+                        <select id="font">
+                            <option value="tiny">Tiny</option>
+                            <option value="medium">Medium</option>
+                            <option value="huge" selected>Huge</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Center horizontally:</td>
+                    <td>
+                        <input type="checkbox" id="center_text" name="center_text">
+                    </td>
+                </tr>
+                <tr>
                     <td>Color:</td>
                     <td>
                         <input type="hidden" id="selectedColor" value="#FFFFFF">
@@ -310,10 +326,13 @@
                 case '/set_line_text':
                     var lineNumValue = parseInt(document.getElementById("line_num").value, 10);
                     var colorValue = document.getElementById("selectedColor").value;
+                    var font = document.getElementById("font").value;
                     data = {
                         line_num: lineNumValue || 1,
                         text: document.getElementById("text").value,
-                        color: colorValue
+                        color: colorValue,
+                        font: font,
+                        center: document.getElementById("center_text").checked
                     };
                     break;
                 case '/set_line_time':

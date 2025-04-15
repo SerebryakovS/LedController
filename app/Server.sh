@@ -64,12 +64,12 @@ KillStart(){
 };
 
 ProcessLine() {
-    local LineNum="$1"; local LineText="$2"; local LineColor="$3";
+    local LineNum="$1"; local LineText="$2"; local LineColor="$3"; local LineFont="$4"; local Center="$5";
 	local Retries=COMMANDS_RETRIES;
     local Success=false;
     if [[ $LineNum -ge 1 && $LineNum -le 4 ]]; then
         while [[ $Retries -gt 0 && $Success == false ]]; do
-            Command="{\"cmd\":\"set_line_text\",\"line_num\":$LineNum,\"text\":$LineText,\"color\":$LineColor}"
+            Command="{\"cmd\":\"set_line_text\",\"line_num\":$LineNum,\"text\":$LineText,\"color\":$LineColor,\"font\":\"$LineFont\",\"center\":$Center}"
             echo "$Command" > "$COMMANDS_PIPE"
             sleep 1;
 			if VerifyLineText "$LineNum" "$LineText"; then
@@ -132,8 +132,10 @@ APIRequestsHandler() {
             KillStart Splasher Controller
             LineNum=$(echo "$Body" | jq ".line_num")
             LineText=$(echo "$Body" | jq ".text")
-            LineColor=$(echo "$Body" | jq ".color")			
-			ProcessLineResult=$(ProcessLine "$LineNum" "$LineText" "$LineColor")
+            LineColor=$(echo "$Body" | jq ".color")
+            LineFont=$(echo "$Body" | jq -r ".font // \"huge\"")
+            Center=$(echo "$Body" | jq ".center // false")
+            ProcessLineResult=$(ProcessLine "$LineNum" "$LineText" "$LineColor" "$LineFont" "$Center")
 			if [[ "$ProcessLineResult" == "success" ]]; then
 				echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"success\"}"
 			else
@@ -148,7 +150,9 @@ APIRequestsHandler() {
 				LineNum=$(echo "$Line" | jq ".line_num")
 				LineText=$(echo "$Line" | jq ".text")
 				LineColor=$(echo "$Line" | jq ".color")
-				ProcessLineResult=$(ProcessLine "$LineNum" "$LineText" "$LineColor");
+                LineFont=$(echo "$Line" | jq -r ".font // \"huge\"")
+                Center=$(echo "$Line" | jq ".center // false")
+                ProcessLineResult=$(ProcessLine "$LineNum" "$LineText" "$LineColor" "$LineFont" "$Center")
 				if [[ "$ProcessLineResult" != "success" ]]; then
 					Status="error"
 					ErrorMessage=$ProcessLineResult;
