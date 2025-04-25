@@ -128,6 +128,27 @@ APIRequestsHandler() {
 	fi;
 	echo $Body > /tmp/LastRequestBody;
     case "$RequestPath" in
+
+
+        "/version")
+            VERSION_FILE="$(dirname "$SCRIPT_PATH")/../VERSION"
+            VERSION_TEXT="unknown"
+            if [[ -f "$VERSION_FILE" ]]; then
+                VERSION_TEXT=$(cat "$VERSION_FILE" | tr -d '\n')
+            fi
+            echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"version\": \"$VERSION_TEXT\"}"
+            ;;
+
+        "/update_and_reboot")
+            echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"Updating & Rebooting...\"}"
+            nohup bash -c '
+                cd /home/pi/LedController && git pull
+                cd lib && make clean && make
+                cd ../app && make clean && make Controller Splasher
+                reboot
+            ' >/dev/null 2>&1 &
+            ;;
+
         "/set_line_text")
             KillStart Splasher Controller
             LineNum=$(echo "$Body" | jq ".line_num")

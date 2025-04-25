@@ -284,6 +284,13 @@
 
             </table>
             <button type="button" onclick="sendConfigData()">Update Config</button>
+
+            <div>
+                <button type="button" onclick="updateAndReboot()" style="background-color: #ed5358; padding: 12px 24px;">Update & Reboot</button>
+            </div>
+        </div>
+        <div id="version" style="text-align: center; margin-top: 40px; font-weight: bold;">
+            Version: ...
         </div>
     </center>
 
@@ -416,6 +423,36 @@
                 }
             };
         }
+
+        function fetchVersion() {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "/version", true);
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    var response = JSON.parse(xhr.responseText);
+                    document.getElementById("version").textContent = "Version: " + response.version;
+                } else {
+                    document.getElementById("version").textContent = "Version: unknown";
+                }
+            };
+            xhr.send();
+        }
+        function updateAndReboot() {
+            if (confirm("Вы уверены, что хотите обновить и перезагрузить устройство?")) {
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", "/update_and_reboot", true);
+                xhr.setRequestHeader("Content-Type", "application/json");
+                xhr.send('{}');
+                alert("Устройство перезагружается...");
+            }
+        }
+
+        // Загружаем версию при загрузке страницы
+        window.onload = function() {
+            fetchVersion();
+            document.getElementById("defaultOpen").click();
+        };
+
     </script>
 </body>
 </html>
