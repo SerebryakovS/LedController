@@ -37,6 +37,7 @@ HTTP Server works on port: 13222
   "text": "Hello!",          // Текст для отображения
   "color": "FF0000",         // Цвет текста (HEX, 6 символов)
   "font": "huge"             // [Опц.] Размер шрифта: tiny | medium | huge (по умолчанию: huge)
+  "center" : true | false    // Центрировать строку по ширине табло
 }
 ```
 Supported colors:
