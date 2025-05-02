@@ -22,8 +22,8 @@
             overflow: hidden;
             padding: 20px;
             font-weight: bold;
-            max-width: 600px;
-            margin: 20px auto;
+            max-width: 1200px;
+/*             margin: 20px auto; */
             display: flex;
             justify-content: center;
         }
@@ -32,7 +32,7 @@
             border: none;
             outline: none;
             cursor: pointer;
-            padding: 14px 16px;
+/*             padding: 0px 0px; */
             transition: 0.3s;
             font-size: 17px;
             color: white;
@@ -80,6 +80,16 @@
             display: flex;
             justify-content: space-around;
         }
+
+        .tab button.configtab {
+            background-color: #ed5358;
+        }
+
+        .tab button.configtab.active {
+            background-color: #007BFF;
+        }
+
+
         .color-button {
             width: 24px;
             height: 24px;
@@ -110,7 +120,8 @@
             <button class="tablinks" onclick="openTab(event, 'SetBlink')">Blink</button>
             <button class="tablinks" onclick="openTab(event, 'SplashBoot')">Splash</button>
             <button class="tablinks" onclick="openTab(event, 'SetColoredStatus')">Status</button>
-            <button class="tablinks" onclick="openTab(event, 'Config')" style="background-color: #ed5358;">Config</button>
+            <button class="tablinks configtab" onclick="openTab(event, 'PanelConfig')">Panels Config</button>
+            <button class="tablinks configtab" onclick="openTab(event, 'NetworkConfig')">Network Config</button>
         </div>
 
         <div id="SetText" class="tabcontent">
@@ -243,8 +254,8 @@
         </div>
 
 
-        <div id="Config" class="tabcontent">
-            <h2>Update Config</h2>
+        <div id="PanelConfig" class="tabcontent">
+            <h2>Panels Config</h2>
             <table>
                 <tr>
                     <td>Single Panel Width:</td>
@@ -283,18 +294,98 @@
                 </tr>
 
             </table>
-            <button type="button" onclick="sendConfigData()">Update Config</button>
+            <button type="button" onclick="sendPanelConfigData()">Update Config</button>
 
             <div>
                 <button type="button" onclick="updateAndReboot()" style="background-color: #ed5358; padding: 12px 24px;">Update & Reboot</button>
             </div>
         </div>
+
+        <div id="NetworkConfig" class="tabcontent">
+            <h2>Network Config</h2>
+            <table>
+                <tr>
+                    <td>Connection Type:</td>
+                    <td>
+                        <select id="network_type" onchange="toggleNetworkFields()">
+                            <option value="dhcp">DHCP</option>
+                            <option value="static">Static</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr class="static-field">
+                    <td>IP Address:</td>
+                    <td><input type="text" id="ip_address"></td>
+                </tr>
+                <tr class="static-field">
+                    <td>Subnet Mask:</td>
+                    <td><input type="text" id="subnet_mask"></td>
+                </tr>
+                <tr class="static-field">
+                    <td>Gateway:</td>
+                    <td><input type="text" id="gateway"></td>
+                </tr>
+                <tr class="static-field">
+                    <td>DNS Server:</td>
+                    <td><input type="text" id="dns_server"></td>
+                </tr>
+            </table>
+            <button type="button" onclick="sendNetworkConfig()">Apply Network Settings</button>
+        </div>
+
+
         <div id="version" style="text-align: center; margin-top: 40px; font-weight: bold;">
             Version: ...
         </div>
     </center>
 
     <script>
+
+        function toggleNetworkFields() {
+            var netType = document.getElementById("network_type").value;
+            var isStatic = (netType === "static");
+            var staticFields = document.querySelectorAll("#NetworkConfig .static-field input");
+
+            staticFields.forEach(function(field) {
+                field.disabled = !isStatic;
+                field.value = isStatic ? field.value : "";
+            });
+        }
+
+        // Initialize the view on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleNetworkFields();
+        });
+
+        function sendNetworkConfig() {
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/set_network_config", true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+
+            var netType = document.getElementById("network_type").value;
+
+            var data = {
+                type: netType
+            };
+
+            if (netType === "static") {
+                data.ip_address = document.getElementById("ip_address").value;
+                data.subnet_mask = document.getElementById("subnet_mask").value;
+                data.gateway = document.getElementById("gateway").value;
+                data.dns_server = document.getElementById("dns_server").value;
+            }
+
+            xhr.send(JSON.stringify(data));
+
+            xhr.onload = function() {
+                if (xhr.status == 200) {
+                    alert("Network settings updated successfully. Device may reboot.");
+                } else {
+                    alert("Error: " + xhr.statusText);
+                }
+            };
+        }
+
         function setColor(colorValue) {
             document.getElementById("selectedColor").value = colorValue;
         }
@@ -396,9 +487,9 @@
             };
         }
 
-        function sendConfigData() {
+        function sendPanelConfigData() {
             var xhr = new XMLHttpRequest();
-            xhr.open("POST", "/set_config", true);
+            xhr.open("POST", "/set_panel_config", true);
             xhr.setRequestHeader("Content-Type", "application/json");
 
             var data = {

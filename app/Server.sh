@@ -276,7 +276,55 @@ APIRequestsHandler() {
             KillStart Controller Splasher "-s $Red,$Green,$Blue -t $Text"
             echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"success\"}"
             ;;
-        "/set_config")
+
+
+        "/set_network_config")
+            NET_TYPE=$(echo "$Body" | jq -r ".type")
+
+            CONNECTION_NAME="eth0"
+            INTERFACE="eth0"
+
+            if [[ "$NET_TYPE" == "dhcp" ]]; then
+                sudo nmcli con mod "$CONNECTION_NAME" ipv4.method auto
+                sudo nmcli con mod "$CONNECTION_NAME" ipv4.addresses ""
+                sudo nmcli con mod "$CONNECTION_NAME" ipv4.gateway ""
+                sudo nmcli con mod "$CONNECTION_NAME" ipv4.dns ""
+            elif [[ "$NET_TYPE" == "static" ]]; then
+                IP_ADDRESS=$(echo "$Body" | jq -r ".ip_address")
+                SUBNET_MASK=$(echo "$Body" | jq -r ".subnet_mask")
+                GATEWAY=$(echo "$Body" | jq -r ".gateway")
+                DNS_SERVER=$(echo "$Body" | jq -r ".dns_server")
+
+                if [[ -z "$IP_ADDRESS" || -z "$SUBNET_MASK" || -z "$GATEWAY" || -z "$DNS_SERVER" ]]; then
+                    echo -ne "HTTP/1.1 400 Bad Request\r\nContent-Type: application/json\r\n\r\n"
+                    echo '{"status": "error", "message": "Missing network parameters"}'
+                    return
+                fi
+                CIDR=$(ipcalc -p "$IP_ADDRESS" "$SUBNET_MASK" | awk -F= '{print $2}')
+
+                if [[ -z "$CIDR" ]]; then
+                    echo -ne "HTTP/1.1 400 Bad Request\r\nContent-Type: application/json\r\n\r\n"
+                    echo '{"status": "error", "message": "Invalid subnet mask"}'
+                    return
+                fi
+                sudo nmcli con mod "$CONNECTION_NAME" ipv4.method manual \
+                    ipv4.addresses "$IP_ADDRESS/$CIDR" \
+                    ipv4.gateway "$GATEWAY" \
+                    ipv4.dns "$DNS_SERVER"
+            else
+                echo -ne "HTTP/1.1 400 Bad Request\r\nContent-Type: application/json\r\n\r\n"
+                echo '{"status": "error", "message": "Invalid network type"}'
+                return
+            fi
+            sudo nmcli con down "$CONNECTION_NAME"
+            sleep 1
+            sudo nmcli con up "$CONNECTION_NAME"
+
+            echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n"
+            echo '{"status": "success", "message": "Network configuration updated via nmcli"}'
+            ;;
+
+        "/set_panel_config")
             KillProcess Splasher
             KillProcess Controller
             SinglePanelWidth=$(echo "$Body" | jq ".panel_width // $SinglePanelWidth")
