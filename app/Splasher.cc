@@ -85,7 +85,7 @@ void DrawIPAddress(RGBMatrix *Matrix, RGBMatrix::Options *MatrixOptions, const s
     int TextLength = 4 * IpAddress.length();
 	int XOffset = Matrix->width()/2 - TextLength / 2;
     Color _Color(0, 255, 0);
-	rgb_matrix::DrawText(OffscreenCanvas, Font, XOffset+1, MatrixOptions->rows + MatrixOptions->rows * 1/3, _Color, nullptr, IpAddress.c_str(), 0);
+	rgb_matrix::DrawText(OffscreenCanvas, Font, XOffset+1, MatrixOptions->rows - MatrixOptions->rows * 1/5, _Color, nullptr, IpAddress.c_str(), 0);
 };
 
 volatile bool InterruptReceived = false;

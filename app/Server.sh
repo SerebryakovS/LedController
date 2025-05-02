@@ -140,13 +140,30 @@ APIRequestsHandler() {
             ;;
 
         "/update_and_reboot")
-            echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"Updating & Rebooting...\"}"
-            nohup bash -c '
-                cd /home/pi/LedController && git pull
-                cd lib && make clean && make
-                cd ../app && make clean && make Controller Splasher
-                reboot
-            ' >/dev/null 2>&1 &
+            VERSION_FILE="$(dirname "$SCRIPT_PATH")/../VERSION"
+            LOG_FILE="/tmp/update_and_reboot.log"
+            echo "$(date): Checking for updates..." > "$LOG_FILE"
+
+            GIT_OUTPUT=$(cd /home/pi/LedController && git pull 2>&1)
+            echo "$GIT_OUTPUT" >> "$LOG_FILE"
+
+            if echo "$GIT_OUTPUT" | grep -q "Already up to date."; then
+                echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"already_updated\", \"message\": \"No updates found.\"}"
+            elif echo "$GIT_OUTPUT" | grep -q "Updating"; then
+                # Обновления есть — делаем сборку и перезагрузку в фоне
+                echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"updated\", \"message\": \"Updates pulled. Rebuilding and rebooting.\"}"
+
+                nohup bash -c '
+                    cd /home/pi/LedController
+                    echo "$(date): Starting build..." >> '"$LOG_FILE"'
+                    cd lib && make clean && make >> '"$LOG_FILE"' 2>&1
+                    cd ../app && make clean && make Controller Splasher >> '"$LOG_FILE"' 2>&1
+                    echo "$(date): Rebooting..." >> '"$LOG_FILE"'
+                    reboot
+                ' >/dev/null 2>&1 &
+            else
+                echo -ne "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"error\", \"message\": \"Update check failed. Output: $(echo "$GIT_OUTPUT" | tr '\n' ' ')\"}"
+            fi
             ;;
 
         "/set_line_text")

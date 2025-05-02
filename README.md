@@ -92,3 +92,4 @@ Supported colors:
 	"text" : "123456"
 }
 ```
+\_(°‿°)_/
